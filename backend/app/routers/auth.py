@@ -22,6 +22,7 @@ def register(payload: UserCreate, session: Session = Depends(get_session)):
         password_hash=hash_password(payload.password),
         email=payload.email,
         discord_id=payload.discord_id,
+        alarm_style=payload.alarm_style,
     )
     session.add(user)
     session.commit()
