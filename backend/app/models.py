@@ -12,6 +12,9 @@ class User(SQLModel, table=True):
     username: str = Field(unique=True, index=True)
     # 평문 비밀번호는 절대 저장하지 않는다 — 해시만 저장.
     password_hash: str
+    # 구글 캘린더 연동/디스코드 개인 알림은 다른 담당이 만들 기능 — 여기서는 값만 받아서 저장.
+    email: Optional[str] = None
+    discord_id: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 

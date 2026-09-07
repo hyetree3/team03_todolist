@@ -10,11 +10,21 @@ from pydantic import BaseModel
 class UserCreate(BaseModel):
     username: str
     password: str
+    # 구글 캘린더/디스코드 개인 알림 연동용 — 다른 담당 기능이 쓸 값이라 여기선 저장만 한다.
+    email: Optional[str] = None
+    discord_id: Optional[str] = None
+
+
+class UserLogin(BaseModel):
+    username: str
+    password: str
 
 
 class UserRead(BaseModel):
     id: int
     username: str
+    email: Optional[str] = None
+    discord_id: Optional[str] = None
     created_at: datetime
 
     model_config = {"from_attributes": True}
