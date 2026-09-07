@@ -68,6 +68,11 @@ Authorization: Bearer <access_token>
 
 > ⚠️ 표준 OAuth2 폼(form-urlencoded)이 아니라 **회원가입과 동일하게 JSON body**를 받습니다.
 
+### `GET /users/me` — 내 정보 조회 (로그인 필요)
+
+요청 body 없음. 성공 응답 `200`: `POST /auth/register` 성공 응답과 같은 형태 (point 포함).
+할일 완료해서 point가 바뀐 뒤 최신 값 확인할 때 이 엔드포인트를 다시 호출하면 됩니다.
+
 ## 할일 (전부 로그인 필요, 본인 것만 조회/조작)
 
 todo 객체 응답 형태 (공통):
@@ -110,6 +115,7 @@ todo 객체 응답 형태 (공통):
 { "title": "장보기 (수정)", "memo": "우유는 저지방으로", "category": "🛒", "due_at": "2026-03-11T18:00:00", "is_done": true }
 ```
 - **완료 처리는 이 엔드포인트의 `is_done`으로 한다.** 완료 전용 엔드포인트는 없음.
+- `is_done`을 `false → true`로 바꾸면 내 `point`가 10점 오른다 (`true → false`로 되돌리면 다시 10점 차감). 이 응답엔 point가 안 나오니, 바뀐 값은 `GET /users/me`로 확인.
 
 성공 응답: `200` + 수정된 todo 객체
 실패: 없는 id이거나 남의 id → `404`
