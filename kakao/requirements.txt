@@ -1,0 +1,48 @@
+# CLAUD.MD에 명시된 공용 가상환경 버전 고정 목록
+annotated-doc==0.0.5
+annotated-types==0.8.0
+anyio==4.15.1
+APScheduler==3.11.3
+bcrypt==5.0.0
+certifi==2026.7.22
+cffi==2.1.1
+charset-normalizer==3.5.1
+click==8.5.0
+cryptography==50.0.1
+ecdsa==0.19.2
+fastapi==0.141.1
+greenlet==3.5.5
+h11==0.16.0
+httptools==0.8.0
+idna==3.19
+pyasn1==0.6.4
+pycparser==3.0
+pydantic==2.13.5
+pydantic_core==2.46.5
+python-dotenv==1.2.3
+python-jose==3.5.0
+python-multipart==0.0.32
+PyYAML==6.0.3
+requests==2.34.2
+rsa==4.9.1
+six==1.17.0
+SQLAlchemy==2.0.52
+sqlmodel==0.0.42
+starlette==1.6.0
+typing-inspection==0.4.4
+typing_extensions==4.16.0
+tzdata==2026.3
+tzlocal==5.4.4
+urllib3==2.7.0
+uvicorn==0.52.4
+watchfiles==1.2.0
+websockets==17.1
+
+# ---------- kakao 파트(Discord 봇 + Google Calendar 연동) 전용 추가 패키지 ----------
+# discord.py 2.4+ 부터 User-Installable App(서버 없이 개인 계정 설치) 지원
+discord.py==2.4.0
+# Python 3.13+에서 표준 라이브러리 audioop가 제거되어 discord.py가 필요로 하는 대체 패키지
+audioop-lts==0.2.1; python_version >= "3.13"
+google-auth==2.35.0
+google-auth-oauthlib==1.2.1
+google-api-python-client==2.149.0
