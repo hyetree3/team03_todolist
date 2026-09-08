@@ -1,4 +1,6 @@
 .env
+app.db
+seed.py
 __pycache__/
 *.pyc
 .venv/
