@@ -5,6 +5,9 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel
 
+# 할일 구분용 카테고리. 이모지 자유 문자열이었다가, 고정된 4개 중 하나만 고르는 방식으로 변경.
+TodoCategory = Literal["중요", "업무", "개인", "기타"]
+
 
 # ---------- 인증 ----------
 class UserCreate(BaseModel):
@@ -60,14 +63,14 @@ class PointHistory(BaseModel):
 class TodoCreate(BaseModel):
     title: str
     memo: Optional[str] = None
-    category: Optional[str] = None
+    category: Optional[TodoCategory] = None
     due_at: Optional[datetime] = None
 
 
 class TodoUpdate(BaseModel):
     title: Optional[str] = None
     memo: Optional[str] = None
-    category: Optional[str] = None
+    category: Optional[TodoCategory] = None
     due_at: Optional[datetime] = None
     is_done: Optional[bool] = None
 
@@ -76,7 +79,7 @@ class TodoRead(BaseModel):
     id: int
     title: str
     memo: Optional[str] = None
-    category: Optional[str] = None
+    category: Optional[TodoCategory] = None
     due_at: Optional[datetime] = None
     is_done: bool
     created_at: datetime
