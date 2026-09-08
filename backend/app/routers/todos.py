@@ -77,11 +77,19 @@ def get_todo_stats(
     prev_start, prev_end = previous_period_range(period, start, end)
 
     def completed_count_and_daily(range_start, range_end):
+        # 할일(todo_id)별로 "가장 최근" point_log 행 하나만 본다 — 완료/취소를 몇 번
+        # 반복했든 최종 상태 기준으로 날짜당 1건만 잡히게 하기 위함(완료 이벤트를
+        # 그냥 다 세면 취소된 것까지 중복으로 잡혀서 실제 완료 개수보다 부풀려짐).
+        latest_id_subq = (
+            select(func.max(PointLog.id))
+            .where(PointLog.user_id == user.id, PointLog.todo_id.is_not(None))
+            .group_by(PointLog.todo_id)
+        )
         rows = session.exec(
             select(PointLog.pointdate, func.count())
             .where(
-                PointLog.user_id == user.id,
-                PointLog.point > 0,
+                PointLog.id.in_(latest_id_subq),
+                PointLog.point > 0,  # 최종 상태가 완료(+10)인 것만 — 취소로 끝난 건 제외
                 PointLog.pointdate >= range_start.date(),
                 PointLog.pointdate < range_end.date(),
             )
