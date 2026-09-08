@@ -24,7 +24,7 @@ const belongsToToday = (todo, todayKst) => {
 }
 
 export default function TodosPage() {
-  const { username, todoState, preferenceState, todayPointState } = useOutletContext()
+  const { username, todoState, preferenceState, todayPointState, dailyPlantState } = useOutletContext()
   const { todos, isLoading, error, loadTodos, createTodo, updateTodo, deleteTodo, getTodo } = todoState
   const { preferences, updatePreference, removePreference } = preferenceState
   const [detail, setDetail] = useState({ isOpen: false, isLoading: false, todo: null, error: '' })
@@ -112,6 +112,8 @@ export default function TodosPage() {
         todayTotal={todayDueTodos.length}
         todayCompleted={todayCompleted}
         showPointFeedback={showPointFeedback}
+        todayPlant={dailyPlantState.todayPlant}
+        onSelectPlant={dailyPlantState.selectTodayPlant}
       />
       <TodoComposer onCreate={handleCreate} />
 

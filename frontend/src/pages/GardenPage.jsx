@@ -1,15 +1,15 @@
 import { useMemo, useState } from 'react'
+import { useOutletContext } from 'react-router-dom'
 import { usePoints } from '../hooks/usePoints.js'
-import { getTodayKstDateKey } from '../utils/dateTime.js'
 import PlantGrowth from '../components/PlantGrowth.jsx'
-import { getGrowth, PLANT_TYPES } from '../components/GrowthPanel.jsx'
-
-const plantForDate = (date) => PLANT_TYPES[(Number(date.slice(-2)) - 1) % PLANT_TYPES.length].id
+import { getGrowth } from '../components/GrowthPanel.jsx'
+import { getPlantLabel } from '../utils/plants.js'
 
 export default function GardenPage() {
+  const { todayKst: today, dailyPlantState } = useOutletContext()
+  const { dailyPlants } = dailyPlantState
   const [view, setView] = useState('month')
   const { points, isLoading, error, loadPoints } = usePoints(view)
-  const today = getTodayKstDateKey()
   const year = today.slice(0, 4)
   const month = Number(today.slice(5, 7))
   const months = useMemo(() => {
@@ -30,9 +30,24 @@ export default function GardenPage() {
           {points.days.map((day) => {
             const future = day.date > today
             const growth = getGrowth(day.points)
-            return <article key={day.date} className={future ? 'is-future' : day.points === 0 ? 'is-empty' : ''}><time>{Number(day.date.slice(-2))}</time><PlantGrowth type={plantForDate(day.date)} stage={future ? 0 : growth.stageIndex} /><strong>{future ? '예정' : `${day.points}P`}</strong></article>
+            const plantType = dailyPlants[day.date]
+            const className = future ? 'is-future' : plantType ? 'has-plant' : 'has-no-record'
+            return <article key={day.date} className={className}>
+              <time>{Number(day.date.slice(-2))}</time>
+              {!future && plantType
+                ? <PlantGrowth type={plantType} stage={growth.stageIndex} />
+                : <span className="empty-garden-plot" aria-hidden="true" />}
+              <strong>{future ? '예정' : plantType ? `${getPlantLabel(plantType)} · ${day.points}P` : '기록 없음'}</strong>
+            </article>
           })}
-        </section> : <section className="year-garden">{months.map((item) => <article key={item.month}><h2>{item.month}월</h2><div className="mini-garden">{item.days.map((day) => { const future = day.date > today; const stage = getGrowth(day.points).stageIndex; return <span key={day.date} title={`${day.date}: ${future ? '아직 오지 않은 날' : `${day.points}P`}`} className={future ? 'is-future' : `stage-${stage}`} /> })}</div></article>)}</section>}
+        </section> : <section className="year-garden">{months.map((item) => <article key={item.month}><h2>{item.month}월</h2><div className="mini-garden">{item.days.map((day) => {
+          const future = day.date > today
+          const plantType = dailyPlants[day.date]
+          const stage = getGrowth(day.points).stageIndex
+          const state = future ? '아직 오지 않은 날' : plantType ? `${getPlantLabel(plantType)}, ${day.points}P` : '식물 기록 없음'
+          const className = future ? 'is-future' : plantType ? `plant-${plantType} stage-${stage}` : 'has-no-record'
+          return <span key={day.date} title={`${day.date}: ${state}`} className={className} />
+        })}</div></article>)}</section>}
       </>}
     </>
   )

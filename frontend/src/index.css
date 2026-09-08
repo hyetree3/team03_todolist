@@ -577,3 +577,40 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
   .logout-panel { align-items: stretch; flex-direction: column; }
   .logout-panel button { width: 100%; }
 }
+
+/* Daily plant selection */
+.sidebar-empty-plant { width: 44px; height: 36px; flex: none; border-bottom: 3px solid #c8ccc5; background: linear-gradient(135deg, transparent 45%, #dfe3dc 46% 54%, transparent 55%); opacity: .8; }
+.unselected-plant { width: 128px; height: 105px; display: grid; place-items: center; border: 1px dashed #cbd0c9; color: #9ba19a; background: #f4f5f1; }
+.unselected-plant span { font-family: monospace; font-size: 24px; }
+.plant-choice-title { margin: 0 0 6px; font-size: 20px; letter-spacing: -.025em; }
+.unselected-points { margin: 0; color: #737a74; font-size: 10px; }
+.daily-plant-picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 13px; }
+.daily-plant-picker button { min-width: 0; display: grid; place-items: center; gap: 1px; padding: 4px 5px 7px; border: 1px solid #d5dad4; color: #59635b; background: #fbfcf8; cursor: pointer; }
+.daily-plant-picker button:hover { border-color: var(--green); background: var(--green-pale); }
+.daily-plant-picker .plant-art { width: 45px; height: 45px; }
+.daily-plant-picker button span { font-size: 8px; font-weight: 700; white-space: nowrap; }
+.selection-warning, .plant-lock-note { color: #8a908a !important; font-size: 8px !important; }
+.selection-warning { margin: 7px 0 0; }
+.plant-lock-note { margin-top: 4px !important; }
+
+.empty-garden-plot { width: 46px; height: 23px; z-index: 1; border: 1px dashed rgba(86, 69, 48, .35); border-radius: 50%; background: rgba(116, 84, 51, .08); }
+.month-garden article.has-no-record { background: #ccb58a; box-shadow: inset 0 -13px 0 #b99b6e; }
+.month-garden article.has-no-record strong { color: #776958; font-weight: 500; }
+.month-garden article.is-future .empty-garden-plot { border-color: #c8c6bd; background: transparent; opacity: .65; }
+.mini-garden span.has-no-record { border: 1px dotted #c4b793; background: transparent; }
+.mini-garden span.plant-pot { border-radius: 1px; background: #698c61; }
+.mini-garden span.plant-mushroom { border-radius: 50% 50% 20% 20%; background: #b8665c; }
+.mini-garden span.plant-tree { clip-path: polygon(50% 0, 100% 78%, 64% 78%, 64% 100%, 36% 100%, 36% 78%, 0 78%); background: #466f50; }
+.mini-garden span.stage-0 { opacity: .3; }
+.mini-garden span.stage-1 { opacity: .55; }
+.mini-garden span.stage-2 { opacity: .76; }
+.mini-garden span.stage-3 { opacity: 1; }
+
+@media (max-width: 1050px) {
+  .unselected-plant { width: 105px; height: 90px; }
+}
+
+@media (max-width: 760px) {
+  .unselected-plant { width: 90px; height: 78px; }
+  .daily-plant-picker { grid-template-columns: repeat(3, minmax(72px, 1fr)); overflow-x: auto; }
+}

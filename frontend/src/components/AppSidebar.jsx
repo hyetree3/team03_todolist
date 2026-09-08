@@ -10,7 +10,7 @@ const navigation = [
   { to: '/settings', label: '설정' },
 ]
 
-export default function AppSidebar({ username, todayPoints }) {
+export default function AppSidebar({ username, todayPoints, todayPlant }) {
   const growth = getGrowth(todayPoints)
 
   return (
@@ -42,9 +42,11 @@ export default function AppSidebar({ username, todayPoints }) {
 
       <div className="sidebar-footer">
         <div className="sidebar-growth">
-          <PlantGrowth type="pot" stage={growth.stageIndex} />
+          {todayPlant
+            ? <PlantGrowth type={todayPlant} stage={growth.stageIndex} />
+            : <span className="sidebar-empty-plant" aria-hidden="true" />}
           <div>
-            <span>{growth.name}</span>
+            <span>{todayPlant ? growth.name : '오늘 식물 미선택'}</span>
             <strong>{todayPoints}P</strong>
           </div>
         </div>
