@@ -18,6 +18,11 @@ const views = [
   { id: 'completed', label: '완료한 일' },
 ]
 
+const belongsToToday = (todo, todayKst) => {
+  const dueDate = getDueDateKstKey(todo.due_at)
+  return dueDate === null || dueDate <= todayKst
+}
+
 export default function TodosPage() {
   const { username, todoState, preferenceState, todayPointState } = useOutletContext()
   const { todos, isLoading, error, loadTodos, createTodo, updateTodo, deleteTodo, getTodo } = todoState
@@ -45,16 +50,17 @@ export default function TodosPage() {
   ), [categoryFilter, preferences])
 
   const todayDueTodos = useMemo(() => todos.filter((todo) => getDueDateKstKey(todo.due_at) === todayKst), [todos, todayKst])
-  const todayTodos = useMemo(() => todayDueTodos.filter((todo) => !todo.is_done && matchesCategory(todo)), [todayDueTodos, matchesCategory])
-  const otherActiveTodos = useMemo(() => todos.filter((todo) => !todo.is_done && getDueDateKstKey(todo.due_at) !== todayKst && matchesCategory(todo)), [todos, todayKst, matchesCategory])
+  const todayActiveTodos = useMemo(() => todos.filter((todo) => !todo.is_done && belongsToToday(todo, todayKst)), [todos, todayKst])
+  const todayTodos = useMemo(() => todayActiveTodos.filter(matchesCategory), [todayActiveTodos, matchesCategory])
+  const otherActiveTodos = useMemo(() => todos.filter((todo) => !todo.is_done && !belongsToToday(todo, todayKst) && matchesCategory(todo)), [todos, todayKst, matchesCategory])
   const completedTodos = useMemo(() => todos.filter((todo) => todo.is_done && matchesCategory(todo)), [todos, matchesCategory])
   const completedCount = useMemo(() => todos.filter((todo) => todo.is_done).length, [todos])
   const activeCount = todos.length - completedCount
   const todayCompleted = useMemo(() => todayDueTodos.filter((todo) => todo.is_done).length, [todayDueTodos])
 
   const visibleSection = {
-    today: { eyebrow: 'TODAY', title: '오늘의 할 일', todos: todayTodos, emptyMessage: '오늘 마감인 할 일이 없습니다.' },
-    upcoming: { eyebrow: 'UPCOMING', title: '다가오는 일정', todos: otherActiveTodos, emptyMessage: '다른 날짜의 할 일이나 마감 없는 할 일이 없습니다.' },
+    today: { eyebrow: 'TODAY', title: '오늘의 할 일', todos: todayTodos, emptyMessage: '오늘 처리할 할 일이 없습니다.' },
+    upcoming: { eyebrow: 'UPCOMING', title: '다가오는 일정', todos: otherActiveTodos, emptyMessage: '미래 날짜의 할 일이 없습니다.' },
     completed: { eyebrow: 'COMPLETED', title: '완료한 일', todos: completedTodos, emptyMessage: '완료한 할 일이 아직 없습니다.' },
   }[activeView]
 
@@ -96,7 +102,7 @@ export default function TodosPage() {
     <>
       <header className="app-header">
         <div className="header-copy"><p className="planner-date">{formatPlannerDate(todayKst)}</p><h1><strong>{username}</strong>님의 오늘</h1></div>
-        <p className="header-status">오늘 {todayDueTodos.length}개 <span>·</span> 진행 중 {activeCount}개 <span>·</span> 완료 {completedCount}개</p>
+        <p className="header-status">오늘 {todayActiveTodos.length}개 <span>·</span> 진행 중 {activeCount}개 <span>·</span> 완료 {completedCount}개</p>
       </header>
 
       <GrowthPanel
