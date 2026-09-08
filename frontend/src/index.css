@@ -938,3 +938,82 @@ button, input { border-radius: 9px !important; }
   .growth-summary, .today-progress { padding: 16px; }
   .todo-item { padding: 14px 15px; }
 }
+
+/* Lightweight yearly garden map */
+.garden-page-header { min-height: 82px; padding-bottom: 19px; }
+.garden-tabs { margin-top: 20px; margin-bottom: 18px; }
+.garden-summary { margin-bottom: 17px; }
+.year-garden { column-gap: 14px; row-gap: 12px; }
+.year-garden > article {
+  padding: 10px 12px 11px;
+  border: 1px solid #ddd8c9;
+  border-radius: 10px;
+  background: #fbf8ef;
+  box-shadow: none;
+}
+.year-garden h2 { margin: 0 0 8px; color: #687267; font-size: 11px; }
+.year-points-note { margin: 6px 0 0; color: #8a9088; font-size: 9px; }
+.mini-garden {
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background: #f1eadb;
+}
+.mini-garden > .mini-garden-day,
+.mini-garden > .mini-garden-day.has-no-record,
+.mini-garden > .mini-garden-day.is-future,
+.mini-garden > .mini-garden-day.stage-0,
+.mini-garden > .mini-garden-day.stage-1,
+.mini-garden > .mini-garden-day.stage-2,
+.mini-garden > .mini-garden-day.stage-3 {
+  min-width: 0;
+  aspect-ratio: 1.12;
+  position: relative;
+  display: grid;
+  place-items: end center;
+  padding: 1px;
+  overflow: hidden;
+  border: 0;
+  border-right: 1px solid rgba(141, 121, 91, .05);
+  border-bottom: 1px solid rgba(141, 121, 91, .07);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  clip-path: none;
+  opacity: 1;
+}
+.mini-garden > .mini-garden-day:nth-child(7n) { border-right: 0; }
+.mini-garden > .mini-garden-day.is-future {
+  border-color: rgba(146, 139, 121, .045);
+  background: rgba(255, 255, 255, .34);
+  opacity: .48;
+}
+.mini-garden > .mini-garden-day.is-today { outline: 0; background: transparent; }
+.mini-garden > .mini-garden-day.is-today::before {
+  content: "";
+  width: 2px;
+  height: 2px;
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  border-radius: 50%;
+  background: rgba(62, 105, 69, .62);
+}
+.mini-plant {
+  width: 13.5px;
+  height: 13.5px;
+  position: relative;
+  z-index: 1;
+  display: block;
+}
+.mini-plant.mini-stage-1 { width: 17px; height: 17px; }
+.mini-plant.mini-stage-2 { width: 21.5px; height: 21.5px; }
+.mini-plant.mini-stage-3 { width: 25px; height: 25px; }
+
+@media (max-width: 760px) {
+  .year-garden > article { padding: 9px 10px 10px; }
+  .mini-plant.mini-stage-3 { width: 22.5px; height: 22.5px; }
+}
