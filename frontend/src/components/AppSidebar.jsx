@@ -1,23 +1,24 @@
 import { NavLink } from 'react-router-dom'
 import PlantGrowth from './PlantGrowth.jsx'
+import BrandLeaf from './BrandLeaf.jsx'
 import { getGrowth } from './GrowthPanel.jsx'
 
 const navigation = [
-  { to: '/', label: '오늘', end: true },
-  { to: '/calendar', label: '캘린더' },
-  { to: '/stats', label: '통계' },
-  { to: '/garden', label: '나의 정원' },
-  { to: '/settings', label: '설정' },
+  { to: '/', label: '오늘', icon: 'today', end: true },
+  { to: '/calendar', label: '캘린더', icon: 'calendar' },
+  { to: '/stats', label: '통계', icon: 'stats' },
+  { to: '/garden', label: '나의 정원', icon: 'garden' },
+  { to: '/settings', label: '설정', icon: 'settings' },
 ]
 
-export default function AppSidebar({ username, todayPoints }) {
+export default function AppSidebar({ username, todayPoints, todayPlant }) {
   const growth = getGrowth(todayPoints)
 
   return (
     <aside className="app-sidebar">
       <div className="sidebar-top">
         <div className="sidebar-brand">
-          <span className="sidebar-brand-mark" aria-hidden="true" />
+          <BrandLeaf />
           <div>
             <strong>한 잎</strong>
             <span>작은 할 일의 기록</span>
@@ -33,7 +34,7 @@ export default function AppSidebar({ username, todayPoints }) {
               end={item.end}
               className={({ isActive }) => (isActive ? 'is-selected' : '')}
             >
-              <span className="nav-pixel" aria-hidden="true" />
+              <span className={`nav-icon nav-icon-${item.icon}`} aria-hidden="true" />
               {item.label}
             </NavLink>
           ))}
@@ -42,9 +43,11 @@ export default function AppSidebar({ username, todayPoints }) {
 
       <div className="sidebar-footer">
         <div className="sidebar-growth">
-          <PlantGrowth type="pot" stage={growth.stageIndex} />
+          {todayPlant
+            ? <PlantGrowth type={todayPlant} stage={growth.stageIndex} />
+            : <span className="sidebar-empty-plant" aria-hidden="true" />}
           <div>
-            <span>{growth.name}</span>
+            <span>{todayPlant ? growth.name : '오늘 식물 미선택'}</span>
             <strong>{todayPoints}P</strong>
           </div>
         </div>

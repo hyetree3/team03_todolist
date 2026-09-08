@@ -2,6 +2,9 @@ import { apiRequest } from './client.js'
 
 export const getTodos = () => apiRequest('/todos', { auth: true })
 export const getTodo = (id) => apiRequest(`/todos/${id}`, { auth: true })
+export const getTodoStats = (period = 'week') => (
+  apiRequest(`/todos/stats?period=${encodeURIComponent(period)}`, { auth: true })
+)
 
 export const createTodo = (todo) => apiRequest('/todos', {
   method: 'POST',

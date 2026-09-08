@@ -24,7 +24,7 @@ const belongsToToday = (todo, todayKst) => {
 }
 
 export default function TodosPage() {
-  const { username, todoState, preferenceState, todayPointState } = useOutletContext()
+  const { username, todoState, preferenceState, todayPointState, dailyPlantState } = useOutletContext()
   const { todos, isLoading, error, loadTodos, createTodo, updateTodo, deleteTodo, getTodo } = todoState
   const { preferences, updatePreference, removePreference } = preferenceState
   const [detail, setDetail] = useState({ isOpen: false, isLoading: false, todo: null, error: '' })
@@ -57,6 +57,7 @@ export default function TodosPage() {
   const completedCount = useMemo(() => todos.filter((todo) => todo.is_done).length, [todos])
   const activeCount = todos.length - completedCount
   const todayCompleted = useMemo(() => todayDueTodos.filter((todo) => todo.is_done).length, [todayDueTodos])
+  const isTodayDueComplete = todayDueTodos.length > 0 && todayCompleted === todayDueTodos.length
 
   const visibleSection = {
     today: { eyebrow: 'TODAY', title: '오늘의 할 일', todos: todayTodos, emptyMessage: '오늘 처리할 할 일이 없습니다.' },
@@ -111,7 +112,10 @@ export default function TodosPage() {
         error={todayPointState.error}
         todayTotal={todayDueTodos.length}
         todayCompleted={todayCompleted}
+        isTodayDueComplete={isTodayDueComplete}
         showPointFeedback={showPointFeedback}
+        todayPlant={dailyPlantState.todayPlant}
+        onSelectPlant={dailyPlantState.selectTodayPlant}
       />
       <TodoComposer onCreate={handleCreate} />
 

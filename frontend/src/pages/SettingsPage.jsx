@@ -18,12 +18,34 @@ export default function SettingsPage() {
   const [connectingTarget, setConnectingTarget] = useState('')
   const [searchParams, setSearchParams] = useSearchParams()
 
-  // Discord/Google 연동 버튼 클릭 -> OAuth 인증 화면 -> 콜백이 여기(?connected=&status=)로
-  // 다시 리다이렉트시킴. 그 결과를 메시지로 보여주고 최신 연동 상태를 다시 불러온다.
+  // 새 탭(연동하기로 열린 팝업)에서 콜백을 받으면, 원래 탭(opener)에 postMessage로
+  // 알려주고 이 탭은 닫는다.
+  useEffect(() => {
+    const handleMessage = (event) => {
+      if (event.origin !== window.location.origin) return
+      if (event.data?.type !== 'oauth-connected') return
+      const { connected, status } = event.data
+      const label = CONNECTION_LABELS[connected] || connected
+      setMessage(status === 'success' ? `${label} 연동이 완료되었습니다.` : `${label} 연동에 실패했습니다. 다시 시도해주세요.`)
+      if (status === 'success') loadProfile()
+    }
+    window.addEventListener('message', handleMessage)
+    return () => window.removeEventListener('message', handleMessage)
+  }, [loadProfile])
+
+  // Discord/Google 연동 버튼 클릭 -> 새 탭에서 OAuth 인증 화면 -> 콜백이 그 새 탭에서
+  // 여기(?connected=&status=)로 다시 리다이렉트됨.
   useEffect(() => {
     const connected = searchParams.get('connected')
     const status = searchParams.get('status')
     if (!connected) return
+
+    // 새 탭에서 돌아온 콜백이면, 원래 탭에 알려주고 이 탭은 닫는다.
+    if (window.opener && window.opener !== window) {
+      window.opener.postMessage({ type: 'oauth-connected', connected, status }, window.location.origin)
+      window.close()
+      return
+    }
 
     const label = CONNECTION_LABELS[connected] || connected
     setMessage(status === 'success' ? `${label} 연동이 완료되었습니다.` : `${label} 연동에 실패했습니다. 다시 시도해주세요.`)
@@ -47,11 +69,22 @@ export default function SettingsPage() {
   const startConnection = async (target, getAuthUrl) => {
     setConnectingTarget(target)
     setMessage('')
+    // 팝업 차단 회피: 클릭 이벤트 안에서 "동기적으로" 먼저 빈 탭을 열어둔다.
+    // await(비동기 API 호출) 이후에 window.open을 부르면 브라우저가 더 이상
+    // "사용자 동작으로 열린 탭"으로 안 쳐줘서 팝업 차단에 걸릴 수 있다.
+    const newTab = window.open('', '_blank')
     try {
       const { auth_url: authUrl } = await getAuthUrl()
-      window.location.href = authUrl
+      if (newTab) {
+        newTab.location.href = authUrl
+      } else {
+        // 그래도 팝업이 차단됐으면 최소한 지금 탭에서라도 진행되게 폴백.
+        window.location.href = authUrl
+      }
     } catch (requestError) {
+      newTab?.close()
       setMessage(requestError.message)
+    } finally {
       setConnectingTarget('')
     }
   }
