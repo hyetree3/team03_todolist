@@ -8,7 +8,7 @@ Todo 앱 + Discord/Google Calendar 알림 서비스입니다. 이 문서는 **�
 - **Python** (3.11 이상)
 - **Node.js LTS** — https://nodejs.org 에서 설치
 - **팀 시크릿 값** — Discord/Google 연동에 필요한 실제 키 값들. 아래 2단계에서 채워
-  넣어야 하는데, git에는 올라가 있지 않으므로 **재원님(또는 값을 갖고 있는 팀원)에게
+  넣어야 하는데, git에는 올라가 있지 않으므로 **Discord/Google 연동 담당 팀원에게
   직접 받으세요.**
 
 ## 1. 저장소 받기
@@ -35,12 +35,12 @@ copy .env.example .env
 |---|---|
 | `SECRET_KEY` | 아무 랜덤 문자열 (나만 쓰면 됨, 팀원마다 달라도 무방) |
 | `DATABASE_URL` | 그대로 두면 됨 (`sqlite:///./app.db`) |
-| `DISCORD_APPLICATION_ID` | **팀 공유 값** — 재원님에게 받기 |
-| `DISCORD_CLIENT_SECRET` | **팀 공유 값** — 재원님에게 받기 |
-| `DISCORD_BOT_TOKEN` | **팀 공유 값** — 재원님에게 받기 |
-| `GOOGLE_CLIENT_ID` | **팀 공유 값** — 재원님에게 받기 |
-| `GOOGLE_CLIENT_SECRET` | **팀 공유 값** — 재원님에게 받기 |
-| `ENCRYPTION_KEY` | **팀 공유 값** — 재원님에게 받기 |
+| `DISCORD_APPLICATION_ID` | **팀 공유 값** — 연동 담당 팀원에게 받기 |
+| `DISCORD_CLIENT_SECRET` | **팀 공유 값** — 연동 담당 팀원에게 받기 |
+| `DISCORD_BOT_TOKEN` | **팀 공유 값** — 연동 담당 팀원에게 받기 |
+| `GOOGLE_CLIENT_ID` | **팀 공유 값** — 연동 담당 팀원에게 받기 |
+| `GOOGLE_CLIENT_SECRET` | **팀 공유 값** — 연동 담당 팀원에게 받기 |
+| `ENCRYPTION_KEY` | **팀 공유 값** — 연동 담당 팀원에게 받기 |
 
 > ⚠️ 이 표의 "팀 공유 값"들을 빈 채로 두면, Discord/Google 연동 버튼을 눌렀을 때
 > `client_id=`가 빈 URL로 이동하면서 알 수 없는 에러(예: "이메일을 인증해야 해요")가
@@ -79,8 +79,9 @@ copy env.example .env
 
 ## 6. 로그인할 계정이 없다면
 
-`backend/app.db`가 비어있거나 계정이 없으면, 아래 한 줄로 팀 계정 4개(혜림/재원/민서/교수,
-전부 비밀번호 `password123`)와 샘플 할일을 채워 넣을 수 있습니다.
+`backend/app.db`가 비어있거나 계정이 없으면, 아래 한 줄로 데모용 계정 4개(전부 비밀번호
+`password123`, 실제 아이디는 `backend/seed.py`에서 확인)와 샘플 할일을 채워 넣을 수
+있습니다.
 
 ```bash
 cd backend
@@ -94,11 +95,11 @@ python seed.py
   비어있지 않은지 먼저 확인하세요. 브라우저 주소창의 `client_id=` 뒤에 값이 있는지 보면
   바로 알 수 있습니다.
 - **Discord 연동에서 "계정 액세스를 승인할 수 없다"는 식으로 막힌다** → Discord
-  Developer Portal(재원님 계정) → 해당 앱 → **봇** 메뉴의 **"공개 봇"**, **설치** 메뉴의
-  **"사용자 설치"**가 켜져 있는지 확인해달라고 요청하세요.
+  Developer Portal(연동 담당 팀원 계정) → 해당 앱 → **봇** 메뉴의 **"공개 봇"**, **설치**
+  메뉴의 **"사용자 설치"**가 켜져 있는지 확인해달라고 요청하세요.
 - **Google 연동이 `403 access_denied`로 막힌다** → 그 사람의 구글 계정이 아직 "테스트
-  사용자"로 등록 안 된 것입니다. Google Cloud Console(재원님 계정) → OAuth 동의 화면 →
-  테스트 사용자 → 그 이메일 추가.
+  사용자"로 등록 안 된 것입니다. Google Cloud Console(연동 담당 팀원 계정) → OAuth 동의
+  화면 → 테스트 사용자 → 그 이메일 추가.
 - **`.venv`를 폴더째 복사해왔더니 이상하게 동작한다** → `.venv`는 만들어진 경로가 내부에
   고정으로 박혀 있어서 복사하면 깨집니다. 항상 그 자리에서 새로 `python -m venv .venv`로
   만드세요.
