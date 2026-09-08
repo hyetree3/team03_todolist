@@ -5,13 +5,16 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import init_db
+from app.notification_scheduler import start_notification_scheduler
 from app.point_scheduler import start_point_scheduler
-from app.routers import auth, todos, users
+from app.routers import auth, discord_auth, google_auth, todos, users
 
-# 마감 임박 개인 알림(디스코드 DM/구글 캘린더)은 kakao 모듈이 전담하기로 결정함.
-# backend 스케줄러(app/scheduler.py)까지 같이 켜두면 같은 todos.notified 플래그를
-# 두 스케줄러가 동시에 갱신하려고 경쟁해서 중복/누락 발송이 생기므로 여기선 껐다.
-# app/scheduler.py 코드 자체는 참고용으로 남겨둠 (kakao 쪽 공용 채널 폴백 구현 시 재사용 가능).
+# 할일은 오직 이 backend API를 통해서만 생성/수정/삭제되므로(프론트엔드 -> 이 API가
+# 유일한 경로), 개인 알림(디스코드 DM/구글 캘린더)도 kakao의 별도 폴링 프로세스에
+# 맡기지 않고 이 backend가 생성/삭제 시점에 직접 처리한다 (app/notification_scheduler.py).
+# kakao 프로세스는 더 이상 알림용으로 켜둘 필요가 없고, /start 슬래시커맨드 보조 용도로만
+# 남는다 (kakao/README.md 참고). app/scheduler.py, app/notifications.py는 팀 공용 채널
+# 공지용으로 남겨둔 참고 코드일 뿐 호출되지 않는다.
 # from app.scheduler import start_scheduler
 
 
@@ -19,6 +22,7 @@ from app.routers import auth, todos, users
 async def lifespan(app: FastAPI):
     init_db()
     start_point_scheduler()
+    start_notification_scheduler()
     yield
 
 
@@ -38,3 +42,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(todos.router)
 app.include_router(users.router)
+# kakao 파트(재원)의 Discord/Google 연동 OAuth 라우터 — 콜백이 이 프로세스의 포트를
+# 향하고 있어 별도 프로세스가 아니라 이 FastAPI 앱 안에서 직접 떠 있어야 한다.
+app.include_router(discord_auth.router)
+app.include_router(google_auth.router)

@@ -1,0 +1,8 @@
+.env
+env.example
+app.db
+app.db-journal
+__pycache__/
+*.pyc
+.venv/
+CLAUDE.md
