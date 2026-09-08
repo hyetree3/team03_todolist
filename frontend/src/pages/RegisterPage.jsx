@@ -4,7 +4,7 @@ import { register } from '../api/auth.js'
 import AuthLayout from '../components/AuthLayout.jsx'
 import { useAuth } from '../hooks/useAuth.jsx'
 
-const initialForm = { username: '', password: '' }
+const initialForm = { username: '', password: '', passwordConfirm: '' }
 
 export default function RegisterPage() {
   const { isAuthenticated } = useAuth()
@@ -22,10 +22,14 @@ export default function RegisterPage() {
 
   const handleSubmit = async (event) => {
     event.preventDefault()
+    if (form.password !== form.passwordConfirm) {
+      setError('비밀번호가 일치하지 않습니다.')
+      return
+    }
     setIsSubmitting(true)
     setError('')
     try {
-      await register(form)
+      await register({ username: form.username, password: form.password })
       navigate('/login', { replace: true, state: { message: '회원가입이 완료되었습니다. 로그인해주세요.' } })
     } catch (requestError) {
       setError(requestError.message)
@@ -51,6 +55,8 @@ export default function RegisterPage() {
         <input id="username" name="username" value={form.username} onChange={handleChange} autoComplete="username" required />
         <label htmlFor="password">비밀번호</label>
         <input id="password" name="password" type="password" value={form.password} onChange={handleChange} autoComplete="new-password" required />
+        <label htmlFor="passwordConfirm">비밀번호 확인</label>
+        <input id="passwordConfirm" name="passwordConfirm" type="password" value={form.passwordConfirm} onChange={handleChange} autoComplete="new-password" required />
         <button type="submit" disabled={isSubmitting}>{isSubmitting ? '가입 중…' : '계정 만들기'}</button>
       </form>
     </AuthLayout>
