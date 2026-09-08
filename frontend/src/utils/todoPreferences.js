@@ -1,10 +1,8 @@
 export const TODO_CATEGORIES = [
-  { id: 'general', label: '일반' },
-  { id: 'study', label: '공부' },
-  { id: 'career', label: '취업' },
-  { id: 'project', label: '프로젝트' },
+  { id: 'important', label: '중요' },
+  { id: 'work', label: '업무' },
   { id: 'personal', label: '개인' },
-  { id: 'exercise', label: '운동' },
+  { id: 'other', label: '기타' },
 ]
 
 export const TODO_COLORS = [
@@ -22,7 +20,7 @@ export const TODO_COLORS = [
   { id: 'brown', label: '브라운', value: '#715b4c' },
 ]
 
-export const DEFAULT_TODO_PREFERENCE = { category: 'general', color: 'dark' }
+export const DEFAULT_TODO_PREFERENCE = { category: 'other', color: 'dark' }
 
 const getStorageKey = (username) => `todo_preferences_${username}`
 
@@ -46,11 +44,13 @@ export function saveTodoPreferences(username, preferences) {
 }
 
 export function getTodoPreference(preferences, todoId) {
-  return { ...DEFAULT_TODO_PREFERENCE, ...preferences[String(todoId)] }
+  const stored = { ...DEFAULT_TODO_PREFERENCE, ...preferences[String(todoId)] }
+  const validCategory = TODO_CATEGORIES.some(({ id }) => id === stored.category)
+  return { ...stored, category: validCategory ? stored.category : DEFAULT_TODO_PREFERENCE.category }
 }
 
 export function getCategoryLabel(categoryId) {
-  return TODO_CATEGORIES.find(({ id }) => id === categoryId)?.label || '일반'
+  return TODO_CATEGORIES.find(({ id }) => id === categoryId)?.label || '기타'
 }
 
 export function getColorValue(colorId) {

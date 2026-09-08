@@ -102,8 +102,14 @@ export function getDueStatusKst(value, now = new Date()) {
 export function formatCreatedAtKst(value) {
   if (!value) return '-'
 
-  // 현재 백엔드는 created_at을 UTC 기준의 offset 없는 문자열로 생성한다.
-  const instantValue = hasExplicitOffset(value) ? value : `${value}Z`
-  const date = new Date(instantValue)
+  // 최신 backend의 offset 없는 created_at은 이미 KST 벽시계 값이다.
+  if (!hasExplicitOffset(value)) {
+    const match = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/)
+    if (!match) return value
+    const [, year, month, day, hour, minute] = match
+    return formatParts({ year, month, day, hour, minute })
+  }
+
+  const date = new Date(value)
   return Number.isNaN(date.getTime()) ? value : formatParts(getKstParts(date))
 }

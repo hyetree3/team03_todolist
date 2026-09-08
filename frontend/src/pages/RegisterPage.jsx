@@ -4,7 +4,7 @@ import { register } from '../api/auth.js'
 import AuthLayout from '../components/AuthLayout.jsx'
 import { useAuth } from '../hooks/useAuth.jsx'
 
-const initialForm = { username: '', password: '', email: '', discord_id: '' }
+const initialForm = { username: '', password: '' }
 
 export default function RegisterPage() {
   const { isAuthenticated } = useAuth()
@@ -25,12 +25,7 @@ export default function RegisterPage() {
     setIsSubmitting(true)
     setError('')
     try {
-      await register({
-        username: form.username,
-        password: form.password,
-        email: form.email || null,
-        discord_id: form.discord_id || null,
-      })
+      await register(form)
       navigate('/login', { replace: true, state: { message: '회원가입이 완료되었습니다. 로그인해주세요.' } })
     } catch (requestError) {
       setError(requestError.message)
@@ -56,10 +51,6 @@ export default function RegisterPage() {
         <input id="username" name="username" value={form.username} onChange={handleChange} autoComplete="username" required />
         <label htmlFor="password">비밀번호</label>
         <input id="password" name="password" type="password" value={form.password} onChange={handleChange} autoComplete="new-password" required />
-        <label htmlFor="email">이메일 <span>선택</span></label>
-        <input id="email" name="email" type="email" value={form.email} onChange={handleChange} autoComplete="email" />
-        <label htmlFor="discord_id">Discord ID <span>선택</span></label>
-        <input id="discord_id" name="discord_id" value={form.discord_id} onChange={handleChange} />
         <button type="submit" disabled={isSubmitting}>{isSubmitting ? '가입 중…' : '계정 만들기'}</button>
       </form>
     </AuthLayout>
