@@ -55,7 +55,7 @@ export default function GrowthPanel({
             <div className="daily-plant-picker" aria-label="오늘 키울 식물 선택">
               {PLANT_TYPES.map((type) => (
                 <button type="button" key={type.id} onClick={() => onSelectPlant(type.id)}>
-                  <PlantGrowth type={type.id} stage={0} />
+                  <PlantGrowth type={type.id} stage={2} />
                   <span>{type.label}</span>
                 </button>
               ))}

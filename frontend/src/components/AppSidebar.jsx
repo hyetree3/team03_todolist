@@ -3,11 +3,11 @@ import PlantGrowth from './PlantGrowth.jsx'
 import { getGrowth } from './GrowthPanel.jsx'
 
 const navigation = [
-  { to: '/', label: '오늘', end: true },
-  { to: '/calendar', label: '캘린더' },
-  { to: '/stats', label: '통계' },
-  { to: '/garden', label: '나의 정원' },
-  { to: '/settings', label: '설정' },
+  { to: '/', label: '오늘', icon: 'today', end: true },
+  { to: '/calendar', label: '캘린더', icon: 'calendar' },
+  { to: '/stats', label: '통계', icon: 'stats' },
+  { to: '/garden', label: '나의 정원', icon: 'garden' },
+  { to: '/settings', label: '설정', icon: 'settings' },
 ]
 
 export default function AppSidebar({ username, todayPoints, todayPlant }) {
@@ -33,7 +33,7 @@ export default function AppSidebar({ username, todayPoints, todayPlant }) {
               end={item.end}
               className={({ isActive }) => (isActive ? 'is-selected' : '')}
             >
-              <span className="nav-pixel" aria-hidden="true" />
+              <span className={`nav-icon nav-icon-${item.icon}`} aria-hidden="true" />
               {item.label}
             </NavLink>
           ))}
