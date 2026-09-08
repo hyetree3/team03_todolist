@@ -1,18 +1,21 @@
-# Todo List 알림 서비스 — 통합 안내 (E:\test)
+# Todo List 알림 서비스 — 통합 안내
 
 3명이 나눠서 만든 Todo 앱을 **하나의 사이트**로 합쳐서 실행하는 방법을 정리한 문서입니다.
-처음 보는 사람(팀원)도, 나중에 이 폴더를 여는 Claude Code 세션도 이 문서 하나만 읽으면
+처음 보는 사람(팀원)도, 나중에 이 저장소를 여는 Claude Code 세션도 이 문서 하나만 읽으면
 전체 그림을 이해할 수 있도록 썼습니다.
 
-## 이 폴더의 구성
+## 이 저장소의 구성
 
 ```
-E:\test\
+(저장소 루트)
 ├── backend/   FastAPI + SQLite. 회원가입/로그인/할일 CRUD + 통계 + 포인트 + Discord/Google 연동
 ├── frontend/  React + Vite. 사용자가 실제로 보는 화면
 ├── kakao/     Discord 봇 (지금은 /start 슬래시커맨드 보조용, 알림 발송에는 더 이상 필요 없음)
 └── runserver/ 셋을 한 번에 켜는 실행 스크립트
 ```
+
+작업은 `sum` 브랜치에서 진행 중입니다. 클론한 경로가 어디든(팀원마다 다를 수 있음) 아래
+설정 그대로 동작하도록 전부 상대경로 기준으로 맞춰뒀습니다.
 
 담당은 원래 프론트(민서) / 백엔드+DB(혜림) / Discord+Google 연동(재원) 세 명이었고, 이
 문서가 정리하는 통합 작업으로 세 폴더가 실제로 하나의 사이트처럼 동작하게 됐습니다.
@@ -66,7 +69,22 @@ copy env.example .env
   값을 어디서 발급받는지 설명이 있습니다.
 - **frontend/.env**: `VITE_API_BASE_URL` (backend 주소, 기본 `http://localhost:8000`)
 - **kakao/.env**: `/start` 커맨드를 쓸 계획이 없으면 사실상 안 채워도 됩니다. 채운다면
-  `DATABASE_URL`을 backend와 **같은 DB 파일**(`backend/app.db`)의 절대경로로 맞추세요.
+  `DATABASE_URL=sqlite:///../backend/app.db`처럼 backend와 **같은 DB 파일**을 상대경로로
+  가리키게 두세요 (절대경로를 쓰면 다른 컴퓨터/폴더에서 안 맞습니다 — 실제로 겪은 문제라
+  꼭 상대경로 유지).
+
+### 데모/발표용 DB가 없거나 초기화됐을 때
+
+`backend/app.db`가 없거나 계정이 하나도 없으면, backend 폴더에서 아래 한 줄로 팀 계정
+4개(혜림/재원/민서/교수, 전부 비밀번호 `password123`)와 샘플 할일을 채워 넣을 수 있습니다.
+
+```bash
+cd backend
+.venv\Scripts\activate
+python seed.py
+```
+
+이미 있는 계정/할일은 건너뛰므로 여러 번 실행해도 안전합니다.
 
 ## 알림/캘린더는 어떻게 동작하는가 (중요, 헷갈리기 쉬운 부분)
 
@@ -91,6 +109,20 @@ Discord DM 발송과 구글 캘린더 등록/삭제도 **backend가 할일을 �
 Discord/Google 연동 자체(OAuth 로그인 버튼, 콜백 처리)는 `backend/app/routers/
 discord_auth.py`, `google_auth.py`에 있고, Settings 화면(`frontend/src/pages/
 SettingsPage.jsx`)에서 연동/연동 취소를 할 수 있습니다.
+
+## ⚠️ 브랜치 전환할 때 주의 (실제로 파일이 통째로 날아간 적 있음)
+
+`git checkout`이나 `git reset --hard`로 브랜치를 오갈 때, **커밋되지 않은(untracked)
+파일은 git이 지워도 경고 없이 그냥 사라질 수 있습니다.** 실제로 이 저장소에서 브랜치를
+오가던 중 frontend 전체 소스, kakao 모듈 전체, backend의 Discord/Google 연동 파일들이
+한 번에 삭제된 적이 있습니다(다행히 다른 브랜치에 커밋되어 있어서 복구함). 예방하려면:
+
+- 의미 있는 변경을 했으면 **커밋부터 하고** 브랜치를 전환하세요 (커밋 안 된 작업은
+  `git stash`를 쓰더라도 untracked 파일까지 포함하려면 `git stash -u`를 써야 합니다).
+- `.venv`, `node_modules`, `*.db`처럼 큰 폴더/파일은 실수로 같이 커밋되지 않도록
+  `.gitignore`에 반드시 들어있는지 확인하세요.
+- `git reset --hard`는 untracked 파일도 아무 경고 없이 지울 수 있어서(`git checkout`
+  브랜치 전환보다 더 위험함), 정말 필요할 때만 조심해서 쓰세요.
 
 ## 더 자세한 내용은
 
