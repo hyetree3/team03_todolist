@@ -77,18 +77,6 @@ copy env.example .env
 창을 꼭 먼저 정리**하세요 — 안 닫고 다시 실행하면 옛날 창이 계속 떠 있어서 알림이 중복
 발송될 수 있습니다.
 
-## 6. 로그인할 계정이 없다면
-
-`backend/app.db`가 비어있거나 계정이 없으면, 아래 한 줄로 데모용 계정 4개(전부 비밀번호
-`password123`, 실제 아이디는 `backend/seed.py`에서 확인)와 샘플 할일을 채워 넣을 수
-있습니다.
-
-```bash
-cd backend
-.venv\Scripts\activate
-python seed.py
-```
-
 ## 자주 겪는 문제
 
 - **Discord/Google 연동 버튼을 눌렀는데 이상한 에러가 뜬다** → 2단계의 `.env` 값이
