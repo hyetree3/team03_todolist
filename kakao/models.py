@@ -41,6 +41,10 @@ class Todo(SQLModel, table=True):
     category: str | None = Field(default=None)
     due_at: datetime | None = Field(default=None)
     is_done: bool = Field(default=False)
-    # 알림 발송됨 여부 - 중복 발송 방지용 내부 플래그
+    # 알림 발송됨 여부 - 중복 발송 방지용 내부 플래그 ("마감 1시간 전" 알림용)
     notified: bool = Field(default=False)
+    # "할일이 생성됐어요" 알림을 이미 보냈는지 여부 (2026-09-08 추가, kakao 전용 컬럼 —
+    # backend/app/models.py에는 아직 없음, 통합 시 요청해야 함). notified와는 별개로,
+    # 생성 직후 한 번만 보내는 알림용 플래그.
+    created_notified: bool = Field(default=False)
     created_at: datetime = Field(default_factory=now_kst)
