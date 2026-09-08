@@ -85,3 +85,14 @@ def create_reminder_event(refresh_token: str, title: str, due_at: datetime) -> s
     }
     created_event = service.events().insert(calendarId="primary", body=event_body).execute()
     return created_event["id"]
+
+
+def delete_event(refresh_token: str, event_id: str) -> None:
+    """캘린더에서 이벤트를 삭제한다. 할일이 삭제되거나 완료 취소 등으로 더 이상 필요
+    없어졌을 때 쓴다. 이미 지워진 이벤트 id를 다시 지우려 해도 조용히 넘어간다."""
+    credentials = _credentials_from_refresh_token(refresh_token)
+    service = build("calendar", "v3", credentials=credentials)
+    try:
+        service.events().delete(calendarId="primary", eventId=event_id).execute()
+    except Exception as exc:  # noqa: BLE001 - 이미 없는 이벤트일 수 있어 폭넓게 무시
+        print(f"[google_calendar] 이벤트 삭제 실패 (event_id={event_id}): {exc}")

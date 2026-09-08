@@ -3,8 +3,10 @@ from datetime import datetime, timedelta
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from sqlmodel import select
 
+from crypto_utils import decrypt
 from db import get_session
-from models import Todo, User
+from google_calendar import delete_event
+from models import CalendarEventLog, Todo, User
 from notifier import send_created_notification, send_due_soon_notification
 from timeutil import now_kst
 
@@ -118,10 +120,48 @@ def _schedule_all_pending_due_soon() -> None:
             schedule_due_soon(todo.id, todo.due_at)
 
 
+async def cleanup_deleted_todo_events() -> None:
+    """할일이 삭제되면 그 행 자체가 사라져서, kakao가 "이 할일 삭제됐으니 캘린더
+    이벤트도 지워야 한다"는 걸 실시간으로 알 방법이 없다. 대신 notifier가 이벤트를 만들
+    때마다 남겨둔 CalendarEventLog(models.py 참고)를 주기적으로 훑어서, todo_id가 더 이상
+    todos 테이블에 없는 행을 찾아 캘린더 이벤트를 지우고 로그도 같이 지운다."""
+    with get_session() as session:
+        for log in session.exec(select(CalendarEventLog)).all():
+            if session.get(Todo, log.todo_id) is not None:
+                continue  # 할일이 아직 살아있으면 건드리지 않는다
+
+            user = session.get(User, log.user_id)
+            if user and user.google_refresh_token_encrypted:
+                try:
+                    refresh_token = decrypt(user.google_refresh_token_encrypted)
+                    delete_event(refresh_token, log.event_id)
+                except Exception as exc:  # noqa: BLE001 - 외부 API 실패는 폭넓게 잡음
+                    print(f"[scheduler] 삭제된 할일의 캘린더 이벤트 정리 실패 "
+                          f"(event_id={log.event_id}): {exc}")
+                    continue  # 지우기 실패하면 로그를 남겨서 다음 주기에 재시도
+
+            session.delete(log)
+            session.commit()
+
+
 def start_scheduler(interval_minutes: int) -> AsyncIOScheduler:
     global _scheduler
     _scheduler = AsyncIOScheduler()
     _scheduler.add_job(check_and_notify, "interval", minutes=interval_minutes, id="periodic_sweep")
+    _scheduler.add_job(
+        cleanup_deleted_todo_events,
+        "interval",
+        minutes=interval_minutes,
+        id="cleanup_deleted_todo_events",
+    )
     _scheduler.start()
     _schedule_all_pending_due_soon()
+    # 마감 임박 알림은 위에서 이미 재시작 시점에 즉시 재예약되는데, "생성 알림"(+캘린더 등록)은
+    # 원래 5분 주기 스캔에서만 처리돼서, 봇이 막 재시작된 직후엔 최대 5분까지 지연될 수 있었다.
+    # 캘린더 등록은 생성 시점에 최대한 빨리 이뤄져야 의미가 있으므로, 시작하자마자 한 번
+    # 즉시 실행되도록 예약해서 이 지연을 없앤다.
+    _scheduler.add_job(check_and_notify, "date", run_date=now_kst(), id="startup_immediate_check")
+    _scheduler.add_job(
+        cleanup_deleted_todo_events, "date", run_date=now_kst(), id="startup_immediate_cleanup"
+    )
     return _scheduler

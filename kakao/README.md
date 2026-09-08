@@ -2,6 +2,32 @@
 
 `E:\work\CLAUD.MD` 기준 역할 3번(재원) 담당 모듈. **backend/**, **frontend/** 폴더는 이 파트에서 건드리지 않는다.
 
+## 📌 현재 상태 요약 (다른 세션/새로 여는 사람은 이것부터 읽을 것)
+
+**✅ 실제 계정으로 검증 완료된 것** (전부 이 폴더 코드만으로, 독립 실행 상태에서 테스트함):
+- Discord OAuth 연동 버튼 → 앱 설치 → DM 수신까지 전부 (`/start` 없이도 됨)
+- Google Calendar OAuth 연동 버튼 → 실제 캘린더에 일정 생성까지
+- 할일 "생성 시" 알림 + "마감 1시간 전" 정각 알림 (두 가지 다, alarm_style별 문구)
+- 할일 삭제 시 캘린더 이벤트 자동 정리
+
+**❌ 아직 안 된 것 (다음에 할 일)**:
+- kakao의 로컬 테스트 DB(`kakao/app.db`)를 backend의 실제 DB로 연결 전환 (경로만 바꾸면 됨,
+  "🔗 나중에 backend와 합칠 때" 섹션 참고)
+- `routers/google_auth.py`, `routers/discord_auth.py`를 backend FastAPI 프로세스로 실제 이동
+  (같은 섹션 B) 참고 — 단순 복사가 아니라 DB 세션 연결부를 backend 것으로 바꿔야 함)
+- 프론트엔드에 "Discord/Google 연동" 버튼, "연동 중" 로딩 UI 추가 (kakao 쪽 코드는 준비됨,
+  프론트 작업만 남음)
+- backend 스키마에 `created_notified` 컬럼 추가 요청 (아래 "요청해야 하는 것" 참고)
+
+**⚠️ 꼭 알아야 할 것**:
+- `backend/app/models.py`의 `User`에 `calender_alarm`(철자 그대로, "calendar" 아님),
+  `discord_id`, `email` 필드가 있고, kakao의 `models.py`도 여기 맞춰져 있음 — backend
+  스키마가 또 바뀌면 kakao도 같이 맞춰야 함 (지금까지 여러 번 있었던 일).
+- `.env`에 필요한 값들은 `env.example`(git 추적 안 됨, 아래 참고) 참고. `DISCORD_BOT_TOKEN`,
+  `DISCORD_APPLICATION_ID`, `DISCORD_CLIENT_SECRET`, `GOOGLE_CLIENT_ID`,
+  `GOOGLE_CLIENT_SECRET`, `ENCRYPTION_KEY` 전부 필요.
+- 상세 변경 이력은 `E:\work\kakao_session_log.md`에 시간순으로 전부 기록되어 있음.
+
 ## 이 모듈이 하는 일
 
 원본 스펙: "할일 생성 시, 마감시간 1시간 전"에 알림 — 절대 마감 정각에는 보내지 않음.
@@ -47,17 +73,25 @@ Calendar)은 이 kakao 모듈만 발송하며, backend 스케줄러는 실행되
    두 라우터를 옮겨 넣을 것. 단순 `include_router`가 아니라 실제 코드 몇 줄을 backend의
    모델/세션을 쓰도록 고쳐야 함 — 아래 "🔗 나중에 backend와 합칠 때" 섹션 참고.
    (아직 요청/반영 안 됨)
-6. **회원가입 시 email/discord_id 필수 검증 재검토 요청** — 지금 backend의
-   `POST /auth/register`는 `email`/`discord_id` 중 최소 하나가 없으면 `422`를 내는데,
-   이제 Discord는 회원가입 시점이 아니라 "설정 화면에서 OAuth 버튼 클릭"으로 나중에
-   연동하는 흐름이 됐다. 그러니 Discord만으로 알림받고 싶은 사용자가 가입 시점엔 아직
-   `discord_id`가 없어서(연동 전이라) 이 검증에 막힐 수 있다. 정책을 어떻게 할지
-   (가입 시엔 email만 필수로 바꿀지, 그대로 둘지) 혜림님과 상의 필요. (아직 요청/반영 안 됨)
+6. ~~회원가입 시 email/discord_id 필수 검증 재검토~~ — **해결됨.** backend가 회원가입을
+   아이디/비번만 받도록 단순화하고, `email`/`discord_id`/`alarm_style`은 가입 후
+   `PATCH /users/me`(`UserSettingsUpdate`)로 설정하는 방식으로 바뀜. 정확히 이 kakao 파트가
+   요청했던 방향대로 반영됨.
 7. **`todos` 테이블에 `created_notified` 컬럼 추가 요청** — "할일 생성 시 알림" 기능
    (아래 참고)을 위해 kakao 쪽에서 새로 필요해진 컬럼이다 (`notified`와 별개, boolean,
    기본값 false). 지금은 kakao 자체 로컬 DB에만 있고 `backend/app/models.py`에는 없다.
    나중에 DB를 합칠 때 backend 쪽에도 이 컬럼을 추가해달라고 요청해야 한다.
    (아직 요청/반영 안 됨)
+8. ~~구글 캘린더 "연동 여부"를 프론트가 확인할 방법 추가~~ — **해결됨.** backend의 `User`에
+   `calender_alarm: bool` 필드가 추가됨 (철자 그대로 "calender", "calendar" 아님 — 프론트
+   코드에서 필드명 헷갈리지 않게 주의). `GET/PATCH /users/me` 응답에 포함되어 내려옴.
+   kakao의 `routers/google_auth.py` 콜백도 연동 성공 시 이 값을 `True`로 같이 갱신하도록
+   맞춰뒀다. (알림 발송 여부 자체는 여전히 `google_refresh_token_encrypted`로 판단 —
+   `calender_alarm`은 프론트 표시 전용 플래그.)
+9. (참고, 요청 아님) `calendar_event_logs`라는 새 테이블을 kakao가 만들어 쓰기 시작함
+   (할일 삭제 시 캘린더 이벤트 정리용, 아래 "할일 삭제 시 캘린더 이벤트 자동 삭제" 참고).
+   backend 코드가 이 테이블을 알 필요는 없지만, DB를 합칠 때 이 테이블도 같이 있다는 것만
+   참고해달라고 알려주면 됨.
 
 ## 할일 생성 시 알림 (2026-09-08 추가)
 
@@ -65,6 +99,26 @@ Calendar)은 이 kakao 모듈만 발송하며, backend 스케줄러는 실행되
 그동안 "마감 1시간 전"만 구현돼 있었다. 이번에 "생성 시 알림"도 추가했다 — 위 "이 모듈이
 하는 일" 섹션 참고. `models.py`의 `created_notified` 컬럼(신규, 위 7번 참고)으로 중복
 발송을 막는다.
+
+## 할일 삭제 시 캘린더 이벤트 자동 삭제 (2026-09-08 추가)
+
+할일을 완료/취소하는 것과 별개로, 할일 자체가 **삭제**되면 그때 만들어뒀던 구글 캘린더
+이벤트도 같이 지워져야 한다. 문제는 할일이 삭제되면 그 행 자체가 사라져서, "이 이벤트가
+어느 할일 것이었는지" 나중에 알 방법이 없다는 것 — 그래서 이벤트를 만들 때마다
+`CalendarEventLog`(`models.py`, kakao 전용 테이블)에 `todo_id`/`event_id`를 별도로
+기록해둔다.
+
+`scheduler.cleanup_deleted_todo_events()`가 스케줄러 주기마다(+봇 시작 직후 한 번 즉시)
+이 로그를 훑어서, `todo_id`가 더 이상 `todos` 테이블에 없는 행을 찾으면
+`google_calendar.delete_event()`로 캘린더 이벤트를 지우고 로그도 같이 지운다.
+
+실제 계정으로 검증 완료: 할일 생성 → 캘린더 이벤트 생성 확인 → 할일 삭제 → 정리 실행 →
+캘린더에서 실제로 사라지는 것까지 확인함.
+
+**한계**: 할일이 삭제된 시점과 정리 작업이 도는 시점 사이에는 캘린더에 이벤트가 잠깐
+남아있을 수 있다 (다음 주기 또는 봇 재시작 전까지, 최대 폴링 주기만큼). 즉시 반영이
+꼭 필요해지면, backend의 `DELETE /todos/{id}`가 성공한 직후 kakao 쪽에 알려주는 방법을
+나중에 상의해볼 수 있다 (지금은 그렇게까지 안 함).
 
 ## 마감 1시간 전 알림을 정확한 시각에 보내는 방법 (2026-09-08 개선)
 
@@ -161,9 +215,12 @@ python main.py
 나중에 통합할 때는 `DATABASE_URL`을 백엔드와 동일한 DB 파일 경로로 맞춰야 한다 (아직 안 함 —
 경로를 언제 합칠지는 팀과 상의 필요).
 
-`models.py`는 2026-09-08 기준으로 backend 최종 스키마(`memo`/`category`/`point`/`alarm_style`/
-`google_refresh_token_encrypted`)와 컬럼 구성을 맞춰뒀다. `google_refresh_token_encrypted`는
-이미 `backend/app/models.py`에도 같은 이름으로 존재한다 — 더 요청할 필요 없음.
+`models.py`는 2026-09-08 기준으로 backend 최종 스키마(`memo`/`category`/`alarm_style`/
+`google_refresh_token_encrypted`/`calender_alarm`)와 컬럼 구성을 맞춰뒀다.
+`google_refresh_token_encrypted`/`calender_alarm`은 이미 `backend/app/models.py`에도 같은
+이름으로 존재한다 — 더 요청할 필요 없음. (`point`는 2026-09-08에 backend가 `PointLog`라는
+별도 테이블로 옮기면서 `User`에서 제거함 — kakao 알림 로직은 원래 point를 안 썼어서 여기
+`models.py`에서도 그냥 삭제함.)
 
 ## 🔗 나중에 backend와 합칠 때 (통합 체크리스트)
 

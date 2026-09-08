@@ -1,8 +1,11 @@
+from sqlmodel import Session
+
 from crypto_utils import decrypt
+from db import engine
 from discord_bot import send_dm
 from google_calendar import create_reminder_event
 from messages import build_created_message, build_message
-from models import Todo, User
+from models import CalendarEventLog, Todo, User
 
 
 async def send_created_notification(user: User, todo: Todo) -> bool:
@@ -31,7 +34,13 @@ async def send_created_notification(user: User, todo: Todo) -> bool:
         attempted = True
         try:
             refresh_token = decrypt(user.google_refresh_token_encrypted)
-            create_reminder_event(refresh_token, todo.title, todo.due_at)
+            event_id = create_reminder_event(refresh_token, todo.title, todo.due_at)
+            # 나중에 이 할일이 삭제됐을 때 캘린더 이벤트도 같이 지우려면 event_id를
+            # 기억해둬야 하는데, Todo 행 자체가 삭제되면 사라지니 별도 로그에 남긴다
+            # (scheduler.cleanup_deleted_todo_events 참고).
+            with Session(engine) as session:
+                session.add(CalendarEventLog(todo_id=todo.id, user_id=user.id, event_id=event_id))
+                session.commit()
         except Exception as exc:  # noqa: BLE001 - 외부 API 실패는 폭넓게 잡아 재시도 대상으로 남김
             print(f"[notifier] 구글 캘린더 일정 생성 실패 (user_id={user.id}): {exc}")
             all_succeeded = False

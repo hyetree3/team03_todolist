@@ -45,6 +45,8 @@ def google_callback(code: str, state: str):
         if not user:
             raise HTTPException(status_code=404, detail="해당 유저를 찾을 수 없습니다.")
         user.google_refresh_token_encrypted = encrypted_token
+        # 프론트가 진짜 토큰 대신 이 boolean으로 "연동됨"을 판단한다 (backend/app/models.py 참고).
+        user.calender_alarm = True
         session.add(user)
         session.commit()
 
