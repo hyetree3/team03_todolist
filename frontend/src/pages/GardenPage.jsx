@@ -4,7 +4,19 @@ import { usePoints } from '../hooks/usePoints.js'
 import PlantGrowth from '../components/PlantGrowth.jsx'
 import MiniPlant from '../components/MiniPlant.jsx'
 import { getGrowth } from '../components/GrowthPanel.jsx'
-import { getPlantLabel } from '../utils/plants.js'
+import { DEFAULT_PLANT_TYPE, getPlantLabel } from '../utils/plants.js'
+
+const getGardenRecord = (day, dailyPlants, today) => {
+  const selectedPlantType = dailyPlants[day.date]
+  const hasGardenRecord = day.points > 0 || Boolean(selectedPlantType)
+
+  return {
+    future: day.date > today,
+    hasGardenRecord,
+    plantType: selectedPlantType || DEFAULT_PLANT_TYPE,
+    stage: getGrowth(day.points).stageIndex,
+  }
+}
 
 export default function GardenPage() {
   const { todayKst: today, dailyPlantState } = useOutletContext()
@@ -16,14 +28,11 @@ export default function GardenPage() {
   const months = useMemo(() => {
     const result = Array.from({ length: 12 }, (_, index) => ({ month: index + 1, days: [] }))
     ;(points?.days || []).forEach((day) => {
-      const future = day.date > today
-      const plantType = dailyPlants[day.date]
+      const record = getGardenRecord(day, dailyPlants, today)
       result[Number(day.date.slice(5, 7)) - 1].days.push({
         ...day,
-        future,
-        plantType,
-        stage: getGrowth(day.points).stageIndex,
-        state: future ? '아직 오지 않은 날' : plantType ? `${getPlantLabel(plantType)}, ${day.points}P` : '식물 기록 없음',
+        ...record,
+        state: record.future ? '아직 오지 않은 날' : record.hasGardenRecord ? `${getPlantLabel(record.plantType)}, ${day.points}P` : '식물 기록 없음',
       })
     })
     return result
@@ -39,22 +48,20 @@ export default function GardenPage() {
         <section className="garden-summary"><div><p className="eyebrow">{view === 'month' ? `${year}년 ${month}월` : `${year}년`}</p><h2>{view === 'month' ? `${points.total}P의 성장 기록` : '나의 성장 기록'}</h2>{view === 'year' && <p className="year-points-note">올해 모은 {points.total}P</p>}</div>{view === 'month' && <div className="garden-legend"><span><i className="stage-0" />0P</span><span><i className="stage-1" />10P</span><span><i className="stage-2" />30P</span><span><i className="stage-3" />70P</span><span><i className="future" />아직 오지 않은 날</span></div>}</section>
         {view === 'month' ? <section className="month-garden" aria-label={`${month}월 정원`}>
           {points.days.map((day) => {
-            const future = day.date > today
-            const growth = getGrowth(day.points)
-            const plantType = dailyPlants[day.date]
-            const className = future ? 'is-future' : plantType ? 'has-plant' : 'has-no-record'
+            const record = getGardenRecord(day, dailyPlants, today)
+            const className = record.future ? 'is-future' : record.hasGardenRecord ? 'has-plant' : 'has-no-record'
             return <article key={day.date} className={className}>
               <time>{Number(day.date.slice(-2))}</time>
-              {!future && plantType
-                ? <PlantGrowth type={plantType} stage={growth.stageIndex} />
+              {!record.future && record.hasGardenRecord
+                ? <PlantGrowth type={record.plantType} stage={record.stage} />
                 : <span className="empty-garden-plot" aria-hidden="true" />}
-              <strong>{future ? '예정' : plantType ? `${getPlantLabel(plantType)} · ${day.points}P` : '기록 없음'}</strong>
+              <strong>{record.future ? '예정' : record.hasGardenRecord ? `${getPlantLabel(record.plantType)} · ${day.points}P` : '기록 없음'}</strong>
             </article>
           })}
         </section> : <section className="year-garden">{months.map((item) => <article key={item.month}><h2>{item.month}월</h2><div className="mini-garden">{item.days.map((day) => {
-          const className = day.future ? 'is-future' : day.plantType ? `has-plant stage-${day.stage}` : 'has-no-record'
+          const className = day.future ? 'is-future' : day.hasGardenRecord ? `has-plant stage-${day.stage}` : 'has-no-record'
           return <span key={day.date} title={`${day.date}: ${day.state}`} className={`mini-garden-day ${className}${day.date === today ? ' is-today' : ''}`}>
-            {!day.future && day.plantType && <MiniPlant type={day.plantType} stage={day.stage} />}
+            {!day.future && day.hasGardenRecord && <MiniPlant type={day.plantType} stage={day.stage} />}
           </span>
         })}</div></article>)}</section>}
       </>}
