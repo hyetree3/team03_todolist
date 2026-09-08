@@ -36,12 +36,15 @@ class Todo(SQLModel, table=True):
     user_id: int = Field(foreign_key="users.id", index=True)
     title: str
     memo: Optional[str] = None
-    # 할일 구분용 이모지 카테고리 (자유 문자열, 예: "📚"). 프론트가 값을 그대로 렌더링한다.
+    # 할일 구분용 카테고리. 값 종류는 app/schemas.py의 TodoCategory(중요/업무/개인/기타)로 검증.
     category: Optional[str] = None
     due_at: Optional[datetime] = None
     is_done: bool = False
     # 마감 임박 알림을 이미 보냈는지 여부 — 중복 발송 방지용 내부 플래그.
     notified: bool = False
+    # "할일 생성 시 알림" 발송 여부 — kakao 쪽 요청으로 추가. notified(마감 임박용)와는
+    # 별개의 알림 이벤트라 플래그를 따로 둔다. 내부 전용, API 응답에 노출 안 함.
+    created_notified: bool = Field(default=False)
     created_at: datetime = Field(default_factory=now_kst)
 
 
