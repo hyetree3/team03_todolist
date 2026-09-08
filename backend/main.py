@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import init_db
+from app.point_scheduler import start_point_scheduler
 from app.routers import auth, todos, users
 
 # 마감 임박 개인 알림(디스코드 DM/구글 캘린더)은 kakao 모듈이 전담하기로 결정함.
@@ -17,6 +18,7 @@ from app.routers import auth, todos, users
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
+    start_point_scheduler()
     yield
 
 

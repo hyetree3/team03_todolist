@@ -3,9 +3,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 
 from app.database import get_session
-from app.models import User
+from app.models import PointLog, User
 from app.schemas import Token, UserCreate, UserLogin, UserRead
 from app.security import create_access_token, hash_password, verify_password
+from app.timeutil import now_kst
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -17,16 +18,19 @@ def register(payload: UserCreate, session: Session = Depends(get_session)):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="이미 사용 중인 아이디입니다.")
 
     # 비밀번호는 절대 평문으로 저장하지 않는다.
+    # email/discord_id/alarm_style은 가입 화면이 아니라 나중에 설정 화면(PATCH /users/me)에서 받는다.
     user = User(
         username=payload.username,
         password_hash=hash_password(payload.password),
-        email=payload.email,
-        discord_id=payload.discord_id,
-        alarm_style=payload.alarm_style,
     )
     session.add(user)
     session.commit()
     session.refresh(user)
+
+    # 가입 순간부터 "오늘의 포인트 0" 기본 행을 만들어둔다 (자정 스케줄러는 그 이후 날짜부터 처리).
+    session.add(PointLog(user_id=user.id, todo_id=None, point=0, pointdate=now_kst().date()))
+    session.commit()
+
     return user
 
 
