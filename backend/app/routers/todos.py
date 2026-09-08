@@ -1,12 +1,23 @@
 """할일 CRUD API. 전부 로그인 필요, 본인 소유 할일만 조회/조작 가능."""
+from datetime import timedelta
+from typing import Literal, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlmodel import Session, select
+from sqlmodel import Session, func, select
 
 from app.database import get_session
 from app.deps import get_current_user
 from app.models import PointLog, Todo, User
-from app.schemas import TodoCreate, TodoRead, TodoUpdate
-from app.timeutil import now_kst
+from app.schemas import (
+    CategoryStat,
+    DailyCompletion,
+    DateRange,
+    TodoCreate,
+    TodoRead,
+    TodoStats,
+    TodoUpdate,
+)
+from app.timeutil import WEEKDAY_KR, now_kst, period_range, previous_period_range
 
 router = APIRouter(prefix="/todos", tags=["todos"])
 
@@ -48,6 +59,93 @@ def list_todos(
 ):
     todos = session.exec(select(Todo).where(Todo.user_id == user.id)).all()
     return todos
+
+
+@router.get("/stats", response_model=TodoStats)
+def get_todo_stats(
+    period: Literal["today", "week", "month", "year"] = "week",
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+):
+    """통계 화면용. 완료 개수/포인트(+직전 기간 대비 증감율), 요일별 완료 추이,
+    카테고리 비율(완료/미완료 상관없이 그 기간에 마감인 할일 전체 기준)을 한 번에 준다."""
+    start, end = period_range(period)
+    prev_start, prev_end = previous_period_range(period, start, end)
+
+    def completed_count_and_daily(range_start, range_end):
+        rows = session.exec(
+            select(PointLog.pointdate, func.count())
+            .where(
+                PointLog.user_id == user.id,
+                PointLog.point > 0,
+                PointLog.pointdate >= range_start.date(),
+                PointLog.pointdate < range_end.date(),
+            )
+            .group_by(PointLog.pointdate)
+        ).all()
+        return {d.isoformat(): c for d, c in rows}
+
+    def points_total(range_start, range_end):
+        total = session.exec(
+            select(func.sum(PointLog.point)).where(
+                PointLog.user_id == user.id,
+                PointLog.pointdate >= range_start.date(),
+                PointLog.pointdate < range_end.date(),
+            )
+        ).one()
+        return int(total or 0)
+
+    def pct_change(current: int, previous: int) -> Optional[float]:
+        if previous == 0:
+            return None
+        return round((current - previous) / previous * 100, 1)
+
+    counts_by_date = completed_count_and_daily(start, end)
+    completed_count = sum(counts_by_date.values())
+    prev_completed_count = sum(completed_count_and_daily(prev_start, prev_end).values())
+
+    current_points = points_total(start, end)
+    prev_points = points_total(prev_start, prev_end)
+
+    daily: list[DailyCompletion] = []
+    cursor = start.date()
+    while cursor < end.date():
+        date_str = cursor.isoformat()
+        daily.append(DailyCompletion(
+            date=date_str,
+            weekday=WEEKDAY_KR[cursor.weekday()],
+            count=counts_by_date.get(date_str, 0),
+        ))
+        cursor += timedelta(days=1)
+
+    busiest_day = max(daily, key=lambda d: d.count) if daily and any(d.count for d in daily) else None
+
+    category_rows = session.exec(
+        select(Todo.category, func.count())
+        .where(
+            Todo.user_id == user.id,
+            Todo.due_at >= start,
+            Todo.due_at < end,
+        )
+        .group_by(Todo.category)
+    ).all()
+    total_categorized = sum(count for _, count in category_rows) or 1
+    by_category = [
+        CategoryStat(category=category, count=count, ratio=round(count / total_categorized, 3))
+        for category, count in category_rows
+    ]
+
+    return TodoStats(
+        period=period,
+        range=DateRange(start=start.date().isoformat(), end=(end.date() - timedelta(days=1)).isoformat()),
+        completed_count=completed_count,
+        completed_count_change_pct=pct_change(completed_count, prev_completed_count),
+        points_total=current_points,
+        points_change_pct=pct_change(current_points, prev_points),
+        busiest_day=busiest_day,
+        daily=daily,
+        by_category=by_category,
+    )
 
 
 @router.get("/{todo_id}", response_model=TodoRead)

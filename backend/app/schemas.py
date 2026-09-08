@@ -85,3 +85,33 @@ class TodoRead(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+# ---------- 통계 (통계 화면용) ----------
+class DateRange(BaseModel):
+    start: str  # "YYYY-MM-DD"
+    end: str    # "YYYY-MM-DD" (포함, 사람이 읽는 용도)
+
+
+class DailyCompletion(BaseModel):
+    date: str
+    weekday: str  # "일"~"토"
+    count: int    # 그날 완료 처리된 할일 개수
+
+
+class CategoryStat(BaseModel):
+    category: Optional[TodoCategory]
+    count: int
+    ratio: float  # 0~1
+
+
+class TodoStats(BaseModel):
+    period: Literal["today", "week", "month", "year"]
+    range: DateRange
+    completed_count: int
+    completed_count_change_pct: Optional[float]  # 직전 기간 대비 증감율(%). 직전이 0이면 null
+    points_total: int
+    points_change_pct: Optional[float]
+    busiest_day: Optional[DailyCompletion]  # 완료가 하나도 없으면 null
+    daily: list[DailyCompletion]
+    by_category: list[CategoryStat]  # 완료/미완료 상관없이 그 기간에 마감(due_at)인 할일 전체 기준
