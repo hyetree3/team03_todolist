@@ -151,6 +151,37 @@ todo 객체 응답 형태 (공통):
 성공 응답: `204` (본문 없음)
 실패: 없는 id이거나 남의 id → `404`
 
+### `GET /todos/stats?period=week` — 통계 화면용 (로그인 필요)
+
+쿼리 파라미터 `period`: `today` / `week`(기본값) / `month` / `year`. 다른 값이면 `422`.
+
+성공 응답 `200`:
+```json
+{
+  "period": "week",
+  "range": { "start": "2026-09-07", "end": "2026-09-13" },
+  "completed_count": 18,
+  "completed_count_change_pct": 20.0,
+  "points_total": 180,
+  "points_change_pct": 30.0,
+  "busiest_day": { "date": "2026-09-08", "weekday": "화", "count": 7 },
+  "daily": [
+    { "date": "2026-09-07", "weekday": "월", "count": 3 },
+    { "date": "2026-09-08", "weekday": "화", "count": 7 }
+  ],
+  "by_category": [
+    { "category": "업무", "count": 8, "ratio": 0.444 },
+    { "category": "개인", "count": 5, "ratio": 0.278 },
+    { "category": null, "count": 5, "ratio": 0.278 }
+  ]
+}
+```
+- `completed_count`: 그 기간에 완료 **처리된 이벤트** 개수 (완료했다 취소하면 안 셈)
+- `*_change_pct`: 같은 길이의 직전 기간(예: 지난 주) 대비 증감율(%). 직전 기간 값이 0이면 계산 불가라 `null`
+- `busiest_day`: 그 기간 중 완료가 제일 많았던 날. 완료가 하나도 없으면 `null`
+- `daily`: 기간 내 모든 날짜가 다 나옴 (활동 없으면 `count: 0`)
+- `by_category`: **완료 여부 상관없이** `due_at`이 그 기간 안에 있는 할일 전체 기준 (카테고리 안 정한 할일은 `category: null`로 따로 집계)
+
 ## 프론트 연동 시 체크리스트
 
 - [ ] 로그인 성공 시 받은 `access_token`을 저장해뒀다가, 이후 모든 `/todos` 요청에 `Authorization: Bearer <token>` 헤더로 보낸다.
