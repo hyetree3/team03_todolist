@@ -3,26 +3,15 @@
 from datetime import datetime
 from typing import Literal, Optional
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel
 
 
 # ---------- 인증 ----------
 class UserCreate(BaseModel):
+    # 회원가입은 아이디/비번만 받는다. email/discord_id는 나중에 설정 화면에서
+    # UserSettingsUpdate로 따로 등록한다.
     username: str
     password: str
-    # 구글 캘린더/디스코드 개인 알림 연동용 — 다른 담당 기능이 쓸 값이라 여기선 저장만 한다.
-    email: Optional[str] = None
-    discord_id: Optional[str] = None
-    # 알림 말투 스타일. kakao 알림 모듈이 참조해서 메시지 톤을 바꾼다.
-    alarm_style: Literal["love", "normal", "nagging"] = "normal"
-
-    @model_validator(mode="after")
-    def require_notification_channel(self):
-        # kakao 모듈이 개인 알림(디스코드 DM/구글 캘린더)을 담당하므로, 최소 하나는
-        # 연결할 방법이 있어야 회원가입 후 알림을 받을 수 있다.
-        if not self.email and not self.discord_id:
-            raise ValueError("email 또는 discord_id 중 최소 하나는 입력해야 합니다.")
-        return self
 
 
 class UserLogin(BaseModel):
@@ -30,13 +19,21 @@ class UserLogin(BaseModel):
     password: str
 
 
+class UserSettingsUpdate(BaseModel):
+    """가입 후 설정 화면에서 알림 연동 정보를 채우거나 바꿀 때 쓰는 스키마.
+    보낸 필드만 수정됨 (부분 수정)."""
+    email: Optional[str] = None
+    discord_id: Optional[str] = None
+    alarm_style: Optional[Literal["love", "normal", "nagging"]] = None
+
+
 class UserRead(BaseModel):
     id: int
     username: str
     email: Optional[str] = None
     discord_id: Optional[str] = None
-    point: int
     alarm_style: str
+    calender_alarm: bool
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -45,6 +42,18 @@ class UserRead(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+
+# ---------- 포인트 기록 ----------
+class PointDayEntry(BaseModel):
+    date: str  # "YYYY-MM-DD"
+    points: int
+
+
+class PointHistory(BaseModel):
+    period: Literal["today", "week", "month", "year"]
+    total: int  # 이 기간 동안 쌓인 포인트 합계
+    days: list[PointDayEntry]
 
 
 # ---------- 할일 ----------
@@ -61,12 +70,6 @@ class TodoUpdate(BaseModel):
     category: Optional[str] = None
     due_at: Optional[datetime] = None
     is_done: Optional[bool] = None
-
-
-class TodoStats(BaseModel):
-    total: int
-    completed: int
-    completion_rate: float
 
 
 class TodoRead(BaseModel):

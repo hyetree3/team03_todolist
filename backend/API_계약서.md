@@ -24,32 +24,26 @@ Authorization: Bearer <access_token>
 
 요청 body:
 ```json
-{
-  "username": "혜림",
-  "password": "password123",
-  "email": "hyerim@gmail.com",
-  "discord_id": "hyerim#1234",
-  "alarm_style": "normal"
-}
+{ "username": "혜림", "password": "password123" }
 ```
-- `email`, `discord_id`: **둘 중 최소 하나는 필수.** 둘 다 안 보내면 `422`. (개인 알림을 디스코드 DM이나 구글 캘린더 중 하나로는 받을 수 있어야 하기 때문 — kakao 알림 모듈에서 사용)
-- `alarm_style`: 선택, `"love"` / `"normal"` / `"nagging"` 중 하나만 가능 (기본값 `"normal"`). kakao 알림 모듈이 이 값 보고 알림 메시지 말투를 바꿈. 다른 값 보내면 `422`.
+- 가입은 **아이디/비밀번호만** 받습니다. `email`/`discord_id`/`alarm_style`은 가입 화면이 아니라 나중에 설정 화면에서 `PATCH /users/me`로 등록/변경합니다.
 
 성공 응답 `201`:
 ```json
 {
   "id": 1,
   "username": "혜림",
-  "email": "hyerim@gmail.com",
-  "discord_id": "hyerim#1234",
-  "point": 0,
+  "email": null,
+  "discord_id": null,
   "alarm_style": "normal",
+  "calender_alarm": false,
   "created_at": "2026-09-07T06:47:30.435483"
 }
 ```
-- `point`: 할일 완료 시 쌓이는 포인트 (가입 시 0). 나중에 캐릭터/나무 키우기 기능에 쓰일 예정.
+- `alarm_style`: 가입 시 기본값 `"normal"`. `PATCH /users/me`로 나중에 love/normal/nagging 중 선택.
+- `calender_alarm`: 구글 캘린더 연동 완료 여부 (기본 `false`). 실제 연동은 다른 담당 기능(OAuth) 몫이고, 여기선 상태만 보여줌.
 
-실패: 이미 있는 username → `400`, `email`/`discord_id` 둘 다 없거나 `alarm_style` 값이 셋 중 하나가 아니면 → `422`
+실패: 이미 있는 username → `400`
 
 ### `POST /auth/login` — 로그인
 
@@ -57,7 +51,6 @@ Authorization: Bearer <access_token>
 ```json
 { "username": "혜림", "password": "password123" }
 ```
-- 로그인은 `email`/`discord_id` 안 받음 (회원가입 때만).
 
 성공 응답 `200`:
 ```json
@@ -70,8 +63,41 @@ Authorization: Bearer <access_token>
 
 ### `GET /users/me` — 내 정보 조회 (로그인 필요)
 
-요청 body 없음. 성공 응답 `200`: `POST /auth/register` 성공 응답과 같은 형태 (point 포함).
-할일 완료해서 point가 바뀐 뒤 최신 값 확인할 때 이 엔드포인트를 다시 호출하면 됩니다.
+요청 body 없음. 성공 응답 `200`: `POST /auth/register` 성공 응답과 같은 형태.
+
+### `PATCH /users/me` — 설정 변경 (로그인 필요)
+
+가입 후 설정 화면에서 알림 연동 정보를 채우거나 바꿀 때 씁니다. 보낸 필드만 수정됩니다.
+
+요청 body (전부 선택):
+```json
+{ "email": "hyerim@gmail.com", "discord_id": "hyerim#1234", "alarm_style": "love" }
+```
+- `alarm_style`은 `"love"` / `"normal"` / `"nagging"` 중 하나만 가능, 다른 값이면 `422`.
+
+성공 응답: `200` + 갱신된 내 정보 (`GET /users/me`와 같은 형태)
+
+### `GET /users/me/points?period=today` — 포인트 기록 (나무/캐릭터 성장용, 로그인 필요)
+
+포인트는 **평생 누적이 아니라 그날그날의 개념**입니다 — 매일 0부터 시작해서 그날 완료한 할일 개수만큼 쌓입니다 (10=새싹, 30=어린식물, 70=나무, 그래픽은 프론트 담당).
+
+쿼리 파라미터 `period`: `today`(기본값) / `week`(이번 주 월~일) / `month`(이번 달) / `year`(올해). 다른 값이면 `422`.
+
+성공 응답 `200`:
+```json
+{
+  "period": "week",
+  "total": 30,
+  "days": [
+    { "date": "2026-09-07", "points": 0 },
+    { "date": "2026-09-08", "points": 10 },
+    { "date": "2026-09-09", "points": 20 }
+  ]
+}
+```
+- `days`는 기간 내 **모든 날짜를 빠짐없이** 포함 (활동 없는 날은 `points: 0`)
+- `total`은 그 기간 동안 쌓인 포인트 합계
+- 할일을 완료하면(`PATCH /todos/{id}`, `is_done: true`) 그날 `points`가 10 오르고, 다시 미완료로 되돌리면 10 내려감
 
 ## 할일 (전부 로그인 필요, 본인 것만 조회/조작)
 
@@ -115,7 +141,7 @@ todo 객체 응답 형태 (공통):
 { "title": "장보기 (수정)", "memo": "우유는 저지방으로", "category": "🛒", "due_at": "2026-03-11T18:00:00", "is_done": true }
 ```
 - **완료 처리는 이 엔드포인트의 `is_done`으로 한다.** 완료 전용 엔드포인트는 없음.
-- `is_done`을 `false → true`로 바꾸면 내 `point`가 10점 오른다 (`true → false`로 되돌리면 다시 10점 차감). 이 응답엔 point가 안 나오니, 바뀐 값은 `GET /users/me`로 확인.
+- `is_done`을 `false → true`로 바꾸면 오늘 포인트가 10점 오른다 (`true → false`로 되돌리면 다시 10점 차감). 이 응답엔 포인트가 안 나오니, 바뀐 값은 `GET /users/me/points`로 확인.
 
 성공 응답: `200` + 수정된 todo 객체
 실패: 없는 id이거나 남의 id → `404`
@@ -125,22 +151,11 @@ todo 객체 응답 형태 (공통):
 성공 응답: `204` (본문 없음)
 실패: 없는 id이거나 남의 id → `404`
 
-### `GET /todos/stats?period=today` — 완료율 통계
-
-쿼리 파라미터 `period`: `today`(기본값) / `week`(이번 주 월~일) / `month`(이번 달) / `year`(올해) 중 하나. 다른 값이면 `422`.
-
-성공 응답 `200`:
-```json
-{ "total": 5, "completed": 2, "completion_rate": 0.4 }
-```
-- `due_at`이 그 기간 범위 안에 있는 내 할일만 집계 (마감 없는 할일은 제외)
-- `total`이 0이면 `completion_rate`는 `0.0`
-
 ## 프론트 연동 시 체크리스트
 
 - [ ] 로그인 성공 시 받은 `access_token`을 저장해뒀다가, 이후 모든 `/todos` 요청에 `Authorization: Bearer <token>` 헤더로 보낸다.
 - [ ] 토큰 없이 `/todos` 호출하면 `401` — 로그인 페이지로 보내는 처리 필요.
 - [ ] `due_at`이 `null`로 오는 경우(마감 없는 할일)를 화면에서 처리한다.
 - [ ] 완료 체크박스는 `PATCH /todos/{id}` + `{"is_done": true/false}`로 호출한다.
-- [ ] 회원가입 폼에서 `email`/`discord_id` 중 최소 하나는 꼭 입력하게 만든다 (안 그러면 `422`).
-- [ ] 회원가입 폼에 알림 말투 선택(`alarm_style`: love/normal/nagging, 기본 normal) UI 넣을지 프론트에서 결정.
+- [ ] 회원가입 폼은 아이디/비밀번호만. `email`/`discord_id`/알림 말투는 별도 설정 화면에서 `PATCH /users/me`로 받는다.
+- [ ] 나무/캐릭터 성장 화면은 `GET /users/me/points?period=today`의 `total` 값으로 단계(10=새싹/30=어린식물/70=나무) 판정.
