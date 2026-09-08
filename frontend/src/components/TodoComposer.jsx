@@ -1,9 +1,14 @@
 import { useState } from 'react'
 import { toApiKstDateTime } from '../utils/dateTime.js'
+import { DEFAULT_TODO_PREFERENCE } from '../utils/todoPreferences.js'
+import TodoOptions from './TodoOptions.jsx'
 
 export default function TodoComposer({ onCreate }) {
   const [title, setTitle] = useState('')
   const [dueAt, setDueAt] = useState('')
+  const [category, setCategory] = useState(DEFAULT_TODO_PREFERENCE.category)
+  const [color, setColor] = useState(DEFAULT_TODO_PREFERENCE.color)
+  const [showOptions, setShowOptions] = useState(false)
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -18,9 +23,15 @@ export default function TodoComposer({ onCreate }) {
     setIsSubmitting(true)
     setError('')
     try {
-      await onCreate({ title: trimmedTitle, due_at: toApiKstDateTime(dueAt) })
+      await onCreate(
+        { title: trimmedTitle, due_at: toApiKstDateTime(dueAt) },
+        { category, color },
+      )
       setTitle('')
       setDueAt('')
+      setCategory(DEFAULT_TODO_PREFERENCE.category)
+      setColor(DEFAULT_TODO_PREFERENCE.color)
+      setShowOptions(false)
     } catch (requestError) {
       setError(requestError.message)
     } finally {
@@ -35,36 +46,56 @@ export default function TodoComposer({ onCreate }) {
         <h2 id="composer-title">무엇을 해야 하나요?</h2>
       </div>
       <form onSubmit={handleSubmit} className="composer-form">
-        <div className="composer-field title-field">
-          <label htmlFor="new-todo-title">할 일</label>
-          <input
-            id="new-todo-title"
-            value={title}
-            onChange={(event) => {
-              setTitle(event.target.value)
-              setError('')
-            }}
-            placeholder="새 할 일을 입력하세요"
-            disabled={isSubmitting}
-          />
+        <div className="composer-quick-row">
+          <div className="composer-field title-field">
+            <label htmlFor="new-todo-title">할 일</label>
+            <input
+              id="new-todo-title"
+              value={title}
+              onChange={(event) => {
+                setTitle(event.target.value)
+                setError('')
+              }}
+              placeholder="새 할 일을 입력하세요"
+              disabled={isSubmitting}
+            />
+          </div>
+          <button className="add-button" type="submit" disabled={isSubmitting || !title.trim()}>
+            <span aria-hidden="true">＋</span>
+            {isSubmitting ? '추가 중…' : '추가'}
+          </button>
         </div>
-        <div className="composer-field due-field">
-          <label htmlFor="new-todo-due-at">마감 · KST</label>
-          <input
-            id="new-todo-due-at"
-            type="datetime-local"
-            value={dueAt}
-            onChange={(event) => setDueAt(event.target.value)}
-            disabled={isSubmitting}
-          />
-        </div>
-        <button type="submit" disabled={isSubmitting || !title.trim()}>
-          <span aria-hidden="true">＋</span>
-          {isSubmitting ? '추가 중…' : '추가'}
+        <button
+          className="options-toggle"
+          type="button"
+          aria-expanded={showOptions}
+          onClick={() => setShowOptions((current) => !current)}
+        >
+          <span aria-hidden="true">{showOptions ? '−' : '+'}</span>
+          마감 · 분류 · 색상
         </button>
+        {showOptions && (
+          <div className="composer-options-panel">
+            <div className="composer-field due-field">
+              <label htmlFor="new-todo-due-at">마감일시 · KST</label>
+              <input
+                id="new-todo-due-at"
+                type="datetime-local"
+                value={dueAt}
+                onChange={(event) => setDueAt(event.target.value)}
+                disabled={isSubmitting}
+              />
+            </div>
+            <TodoOptions
+              category={category}
+              color={color}
+              onCategoryChange={setCategory}
+              onColorChange={setColor}
+            />
+          </div>
+        )}
       </form>
       {error && <p className="inline-error" role="alert">{error}</p>}
-      <p className="composer-note">마감일시는 한국시간(KST) 기준이며 선택 입력입니다.</p>
     </section>
   )
 }

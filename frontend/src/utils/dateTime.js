@@ -68,6 +68,37 @@ export function formatDueAtKst(value) {
   return formatParts({ year, month, day, hour, minute })
 }
 
+const getDueInstant = (value) => {
+  if (!value) return null
+  const normalized = hasExplicitOffset(value) ? value : `${value.slice(0, 19)}+09:00`
+  const date = new Date(normalized)
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
+export function getDueStatusKst(value, now = new Date()) {
+  if (!value) return null
+
+  const inputValue = toKstDateTimeInput(value)
+  const primary = getDueDateKstKey(value) === getTodayKstDateKey(now)
+    ? `오늘 ${inputValue.slice(11, 16)}`
+    : formatDueAtKst(value)
+  const dueInstant = getDueInstant(value)
+
+  if (!dueInstant) return { primary, secondary: '', tone: 'normal' }
+
+  const minutesLeft = Math.ceil((dueInstant.getTime() - now.getTime()) / 60_000)
+  if (minutesLeft <= 0) return { primary, secondary: '마감 지남', tone: 'overdue' }
+  if (minutesLeft > 120) return { primary, secondary: '', tone: 'normal' }
+
+  const hours = Math.floor(minutesLeft / 60)
+  const minutes = minutesLeft % 60
+  const secondary = hours
+    ? `${hours}시간${minutes ? ` ${minutes}분` : ''} 남음`
+    : `${minutes}분 남음`
+
+  return { primary, secondary, tone: minutesLeft <= 30 ? 'urgent' : 'soon' }
+}
+
 export function formatCreatedAtKst(value) {
   if (!value) return '-'
 

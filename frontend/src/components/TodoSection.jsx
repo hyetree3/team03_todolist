@@ -1,6 +1,7 @@
 import TodoItem from './TodoItem.jsx'
+import { getTodoPreference } from '../utils/todoPreferences.js'
 
-export default function TodoSection({ eyebrow, title, todos, emptyMessage, ...itemActions }) {
+export default function TodoSection({ eyebrow, title, todos, emptyMessage, preferences, now, ...itemActions }) {
   return (
     <section className="todo-section">
       <div className="section-heading">
@@ -12,7 +13,15 @@ export default function TodoSection({ eyebrow, title, todos, emptyMessage, ...it
       </div>
       {todos.length > 0 ? (
         <ul className="todo-list">
-          {todos.map((todo) => <TodoItem key={todo.id} todo={todo} {...itemActions} />)}
+          {todos.map((todo) => (
+            <TodoItem
+              key={todo.id}
+              todo={todo}
+              preference={getTodoPreference(preferences, todo.id)}
+              now={now}
+              {...itemActions}
+            />
+          ))}
         </ul>
       ) : (
         <div className="section-empty">

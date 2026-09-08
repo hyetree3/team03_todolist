@@ -1,7 +1,8 @@
 import { useEffect } from 'react'
 import { formatCreatedAtKst, formatDueAtKst } from '../utils/dateTime.js'
+import { getCategoryLabel, getColorValue } from '../utils/todoPreferences.js'
 
-export default function TodoDetailModal({ todo, isLoading, error, onClose }) {
+export default function TodoDetailModal({ todo, isLoading, error, onClose, preference }) {
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') onClose()
@@ -27,7 +28,8 @@ export default function TodoDetailModal({ todo, isLoading, error, onClose }) {
         {error && <p className="form-error" role="alert">{error}</p>}
         {todo && (
           <dl className="detail-list">
-            <div><dt>제목</dt><dd>{todo.title}</dd></div>
+            <div><dt>제목</dt><dd style={{ color: getColorValue(preference?.color) }}>{todo.title}</dd></div>
+            <div><dt>분류</dt><dd>{getCategoryLabel(preference?.category)}</dd></div>
             <div><dt>상태</dt><dd>{todo.is_done ? '완료' : '진행 중'}</dd></div>
             <div><dt>마감</dt><dd>{formatDueAtKst(todo.due_at)}</dd></div>
             <div><dt>생성</dt><dd>{formatCreatedAtKst(todo.created_at)}</dd></div>
