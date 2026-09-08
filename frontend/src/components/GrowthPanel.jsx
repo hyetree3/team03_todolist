@@ -14,6 +14,7 @@ export default function GrowthPanel({
   error,
   todayTotal,
   todayCompleted,
+  isTodayDueComplete,
   showPointFeedback,
   todayPlant,
   onSelectPlant,
@@ -31,6 +32,13 @@ export default function GrowthPanel({
           </>
         ) : (
           <div className="unselected-plant" aria-hidden="true"><span>?</span></div>
+        )}
+        {isTodayDueComplete && (
+          <span className="completion-sparkles" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+          </span>
         )}
       </div>
 
@@ -63,6 +71,7 @@ export default function GrowthPanel({
             <p className="selection-warning">하루에 한 번만 선택할 수 있어요.</p>
           </>
         )}
+        {isTodayDueComplete && <p className="today-complete-message">오늘 마감 할 일을 모두 완료했어요.</p>}
       </div>
 
       <div className="today-progress">

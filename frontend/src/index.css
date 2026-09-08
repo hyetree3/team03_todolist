@@ -78,7 +78,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 
 /* Growth */
 .growth-panel { display: grid; grid-template-columns: 145px minmax(0, 1fr) minmax(0, .9fr); gap: 34px; align-items: center; padding: 30px 2px; border-bottom: 1px solid var(--line); }
-.plant-stage { display: flex; align-items: center; gap: 9px; }
+.plant-stage { position: relative; display: flex; align-items: center; gap: 9px; }
 .plant-art { width: 86px; height: 86px; flex: none; }
 .plant-caption { display: grid; gap: 2px; }
 .plant-caption span { color: #858b85; font-size: 9px; }
@@ -590,6 +590,32 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .selection-warning, .plant-lock-note { color: #8a908a !important; font-size: 8px !important; }
 .selection-warning { margin: 7px 0 0; }
 .plant-lock-note { margin-top: 4px !important; }
+.completion-sparkles { width: 128px; height: 128px; position: absolute; top: 0; left: 0; pointer-events: none; }
+.completion-sparkles i {
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  display: block;
+  background: #e3aa2f;
+  clip-path: polygon(42% 0, 58% 0, 58% 32%, 68% 32%, 68% 42%, 100% 42%, 100% 58%, 68% 58%, 68% 68%, 58% 68%, 58% 100%, 42% 100%, 42% 68%, 32% 68%, 32% 58%, 0 58%, 0 42%, 32% 42%, 32% 32%, 42% 32%);
+  opacity: .84;
+  animation: completion-sparkle 1.2s ease-out 1 both;
+}
+.completion-sparkles i::before { content: ""; width: 36%; height: 36%; position: absolute; top: 32%; left: 32%; background: #c98b1f; }
+.completion-sparkles i:nth-child(1) { top: 19%; left: 7%; }
+.completion-sparkles i:nth-child(2) { width: 15px; height: 15px; top: 12%; right: 6%; background: #edb93d; animation-duration: 1.4s; animation-delay: .12s; }
+.completion-sparkles i:nth-child(3) { width: 8px; height: 8px; top: 47%; right: 14%; background: #f1c653; animation-duration: 1.05s; animation-delay: .26s; }
+.today-complete-message { margin: 8px 0 0 !important; color: #58705b !important; font-size: 9px !important; font-weight: 700; }
+
+@keyframes completion-sparkle {
+  0% { opacity: .45; transform: scale(.8); }
+  55% { opacity: 1; transform: scale(1.15); }
+  100% { opacity: .82; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .completion-sparkles i { animation: none; }
+}
 
 .empty-garden-plot { width: 46px; height: 23px; z-index: 1; border: 1px dashed rgba(86, 69, 48, .35); border-radius: 50%; background: rgba(116, 84, 51, .08); }
 .month-garden article.has-no-record { background: #ccb58a; box-shadow: inset 0 -13px 0 #b99b6e; }
@@ -606,10 +632,12 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 
 @media (max-width: 1050px) {
   .unselected-plant { width: 105px; height: 90px; }
+  .completion-sparkles { width: 105px; height: 105px; }
 }
 
 @media (max-width: 760px) {
   .unselected-plant { width: 90px; height: 78px; }
+  .completion-sparkles { width: 90px; height: 90px; }
   .daily-plant-picker { grid-template-columns: repeat(3, minmax(72px, 1fr)); overflow-x: auto; }
 }
 
@@ -1017,4 +1045,89 @@ button, input { border-radius: 9px !important; }
 @media (max-width: 760px) {
   .year-garden > article { padding: 9px 10px 10px; }
   .mini-plant.mini-stage-3 { width: 22.5px; height: 22.5px; }
+}
+
+/* Backend-powered statistics */
+.stats-summary {
+  gap: 0;
+  margin-bottom: 26px;
+  border-top: 1px solid var(--line-dark);
+  border-bottom: 1px solid var(--line);
+}
+.stats-summary article,
+.stat-cards.stats-summary article {
+  min-height: 122px;
+  padding: 22px 24px;
+  border: 0;
+  border-right: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.stats-summary article:last-child { border-right: 0; }
+.stats-summary span { color: #747d75; font-size: 10px; font-weight: 680; }
+.stats-summary strong { color: #2f3b31; font-size: 28px; font-weight: 740; }
+.stats-summary .empty-stat-value { max-width: 150px; font-size: 16px; line-height: 1.35; }
+.stats-summary small { color: #818981; font-size: 9px; }
+.stats-grid { grid-template-columns: minmax(0, 1.55fr) minmax(230px, .55fr); }
+.stats-panel {
+  border: 1px solid #dbe2d8;
+  border-radius: 14px;
+  background: #fffef9;
+  box-shadow: none;
+}
+.activity-chart i { min-height: 0; border-radius: 3px 3px 0 0; background: #6f9b78; }
+.stats-source-note { margin: 13px 0 0; color: #929892; font-size: 9px; }
+.growth-record-panel { align-self: stretch; }
+.growth-record-list { margin: 0; }
+.growth-record-list > div { display: flex; align-items: baseline; justify-content: space-between; gap: 18px; padding: 15px 0; border-bottom: 1px solid #e6e9e3; }
+.growth-record-list dt { color: #69726a; font-size: 11px; }
+.growth-record-list dd { margin: 0; color: #344b3a; font-size: 19px; font-weight: 740; }
+.growth-record-note { margin: 18px 0 0; color: #808780; font-size: 9px; line-height: 1.65; }
+
+@media (max-width: 1050px) {
+  .stats-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 760px) {
+  .stats-summary { grid-template-columns: 1fr; }
+  .stats-summary article,
+  .stat-cards.stats-summary article { min-height: 94px; padding: 18px 4px; border-right: 0; border-bottom: 1px solid var(--line); }
+  .stats-summary article:last-child { border-bottom: 0; }
+}
+
+/* Points-based growth distribution */
+.growth-distribution-section { margin-top: 28px; padding: 28px 2px 8px; border-top: 1px solid var(--line-dark); }
+.growth-distribution-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 24px; }
+.growth-distribution-heading .eyebrow { margin-bottom: 7px; }
+.growth-distribution-heading h2 { margin: 0; font-size: 18px; }
+.growth-distribution-heading > p { margin: 0; color: #858d86; font-size: 9px; }
+.growth-distribution-content { display: grid; grid-template-columns: minmax(180px, .58fr) minmax(260px, 1.42fr); align-items: center; gap: 54px; max-width: 720px; margin: 0 auto; padding: 8px 0 14px; }
+.growth-donut { width: 176px; height: 176px; position: relative; display: grid; place-items: center; justify-self: center; margin: 0; border-radius: 50%; }
+.growth-donut figcaption { width: 108px; height: 108px; display: grid; place-content: center; gap: 3px; border-radius: 50%; background: #fffef9; text-align: center; }
+.growth-donut figcaption strong { color: #344b3a; font-size: 24px; line-height: 1; }
+.growth-donut figcaption span { color: #858d86; font-size: 9px; }
+.growth-distribution-details { display: grid; }
+.growth-distribution-details > div { display: flex; align-items: center; justify-content: space-between; gap: 24px; min-height: 42px; border-bottom: 1px solid #e7e9e3; }
+.growth-distribution-details > div:last-child { border-bottom: 0; }
+.growth-distribution-details span { display: flex; align-items: center; gap: 9px; color: #626d64; font-size: 11px; }
+.growth-distribution-details strong { color: #465248; font-size: 11px; }
+.growth-distribution-details small { color: #929992; font-size: 9px; font-weight: 600; }
+.growth-stage-dot { width: 9px; height: 9px; display: inline-block; flex: none; border-radius: 50%; background: #e4dfd2; }
+.growth-stage-dot.is-sprout { background: #bfd0b5; }
+.growth-stage-dot.is-young { background: #82a181; }
+.growth-stage-dot.is-full { background: #486b51; }
+.growth-distribution-empty { margin: 0; padding: 30px 0 20px; color: #858d86; font-size: 11px; text-align: center; }
+.today-growth-stage { max-width: 520px; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px; padding: 18px 0 10px; }
+.today-growth-stage .growth-stage-dot { width: 18px; height: 18px; }
+.today-growth-stage div { display: grid; gap: 3px; }
+.today-growth-stage span { color: #858d86; font-size: 9px; }
+.today-growth-stage strong { color: #344b3a; font-size: 18px; }
+.today-growth-stage b { color: #4f6f56; font-size: 22px; }
+
+@media (max-width: 760px) {
+  .growth-distribution-heading { align-items: flex-start; flex-direction: column; gap: 7px; }
+  .growth-distribution-content { grid-template-columns: 1fr; gap: 26px; }
+  .growth-donut { width: 158px; height: 158px; }
+  .growth-donut figcaption { width: 98px; height: 98px; }
 }

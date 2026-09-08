@@ -29,3 +29,7 @@ export function saveDailyPlants(username, dailyPlants) {
 export function getDailyPlantStorageKey(username) {
   return getStorageKey(username)
 }
+
+export function hasGardenRecord(day, dailyPlants = {}) {
+  return Number(day?.points) > 0 || Boolean(day?.date && dailyPlants[day.date])
+}

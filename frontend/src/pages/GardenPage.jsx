@@ -5,14 +5,15 @@ import PlantGrowth from '../components/PlantGrowth.jsx'
 import MiniPlant from '../components/MiniPlant.jsx'
 import { getGrowth } from '../components/GrowthPanel.jsx'
 import { DEFAULT_PLANT_TYPE, getPlantLabel } from '../utils/plants.js'
+import { hasGardenRecord } from '../utils/dailyPlants.js'
 
 const getGardenRecord = (day, dailyPlants, today) => {
   const selectedPlantType = dailyPlants[day.date]
-  const hasGardenRecord = day.points > 0 || Boolean(selectedPlantType)
+  const hasRecord = hasGardenRecord(day, dailyPlants)
 
   return {
     future: day.date > today,
-    hasGardenRecord,
+    hasGardenRecord: hasRecord,
     plantType: selectedPlantType || DEFAULT_PLANT_TYPE,
     stage: getGrowth(day.points).stageIndex,
   }
