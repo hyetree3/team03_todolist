@@ -2,7 +2,7 @@
 
 채널이 무엇이든 이 로직은 그대로 둔다 (send_notification만 호출).
 """
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from sqlmodel import Session, select
@@ -10,12 +10,13 @@ from sqlmodel import Session, select
 from app.database import engine
 from app.models import Todo, User
 from app.notifications import send_notification
+from app.timeutil import now_kst
 
 scheduler = BackgroundScheduler()
 
 
 def check_and_notify() -> None:
-    now = datetime.utcnow()
+    now = now_kst()
     soon = now + timedelta(hours=1)
 
     with Session(engine) as session:

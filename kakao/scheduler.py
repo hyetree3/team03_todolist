@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from sqlmodel import select
@@ -6,12 +6,17 @@ from sqlmodel import select
 from db import get_session
 from models import Todo, User
 from notifier import send_notification
+from timeutil import now_kst
 
 
 async def check_and_notify() -> None:
     """알람대상: is_done=False AND notified=False AND due_at가 (지금~지금+1시간) 범위 안.
-    발송 성공한 항목만 notified=True로 갱신 (CLAUD.md 명시된 처리 순서)."""
-    now = datetime.utcnow()
+    발송 성공한 항목만 notified=True로 갱신 (CLAUD.md 명시된 처리 순서).
+
+    due_at은 backend가 KST naive datetime으로 저장하므로(now_kst() 참고), 여기서도
+    반드시 now_kst()로 비교해야 한다. UTC로 비교하면 9시간이 어긋나 엉뚱한 시각에
+    알림이 발송된다."""
+    now = now_kst()
     window_end = now + timedelta(hours=1)
 
     with get_session() as session:

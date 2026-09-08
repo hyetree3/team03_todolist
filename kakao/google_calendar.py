@@ -68,11 +68,16 @@ def create_reminder_event(refresh_token: str, title: str, due_at: datetime) -> s
     credentials = _credentials_from_refresh_token(refresh_token)
     service = build("calendar", "v3", credentials=credentials)
 
+    # due_at은 backend가 KST naive datetime으로 저장한 값이다(timeutil.now_kst() 참고).
+    # offset 없는 isoformat()만 보내면 Google이 UTC로 오인하므로, timeZone을 명시해야 한다.
     event_body = {
         "summary": f"[TODO 마감] {title}",
         "description": "TODO LIST 알림 서비스에서 자동으로 생성된 일정입니다.",
-        "start": {"dateTime": due_at.isoformat()},
-        "end": {"dateTime": (due_at + timedelta(minutes=30)).isoformat()},
+        "start": {"dateTime": due_at.isoformat(), "timeZone": "Asia/Seoul"},
+        "end": {
+            "dateTime": (due_at + timedelta(minutes=30)).isoformat(),
+            "timeZone": "Asia/Seoul",
+        },
         "reminders": {
             "useDefault": False,
             "overrides": [{"method": "popup", "minutes": 60}],
