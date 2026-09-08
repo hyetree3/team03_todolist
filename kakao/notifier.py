@@ -26,7 +26,7 @@ async def send_created_notification(user: User, todo: Todo) -> bool:
 
     if user.discord_id:
         attempted = True
-        text = build_created_message(user.alarm_style, todo.title)
+        text = build_created_message(user.alarm_style, todo.title, todo.category)
         ok = await send_dm(user.discord_id, text)
         all_succeeded = all_succeeded and ok
 
@@ -57,5 +57,5 @@ async def send_due_soon_notification(user: User, todo: Todo) -> bool:
     """
     if not user.discord_id:
         return False
-    text = build_message(user.alarm_style, todo.title)
+    text = build_message(user.alarm_style, todo.title, todo.category)
     return await send_dm(user.discord_id, text)
