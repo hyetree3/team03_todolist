@@ -32,8 +32,6 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .auth-intro > .eyebrow { margin-bottom: 17px; }
 .auth-intro h1 { max-width: 560px; margin: 0; font-size: clamp(42px, 5vw, 66px); font-weight: 720; line-height: 1.08; letter-spacing: -.045em; }
 .auth-description { max-width: 430px; margin: 24px 0 40px; color: #656a64; font-size: 17px; line-height: 1.75; }
-.coming-soon { max-width: 410px; display: grid; grid-template-columns: 1fr auto; gap: 12px 24px; padding-top: 22px; border-top: 1px solid var(--line); color: #666d67; font-size: 13px; }
-.coming-soon strong { color: #8b908b; font-size: 11px; font-weight: 650; letter-spacing: .04em; }
 .auth-panel { padding: 40px; border: 1px solid var(--line); background: var(--paper); box-shadow: 10px 10px 0 rgba(47, 57, 50, .035); }
 .panel-heading { margin-bottom: 28px; }
 .panel-heading .eyebrow { margin-bottom: 9px; }
@@ -873,10 +871,7 @@ button, input { border-radius: 9px !important; }
 .auth-intro::before { display: none; }
 .auth-brand { display: flex; align-items: center; gap: 11px; margin-bottom: 45px; }
 .auth-brand strong { font-size: 26px; font-weight: 850; letter-spacing: -.05em; }
-.auth-brand-mark { width: 27px; height: 27px; position: relative; border-radius: 8px 8px 12px 8px; background: #4e8056; box-shadow: inset -3px -3px 0 #376340; }
-.auth-brand-mark::before, .auth-brand-mark::after { content: ""; position: absolute; width: 11px; height: 7px; border-radius: 9px 1px; background: #dceba9; }
-.auth-brand-mark::before { left: 4px; top: 5px; transform: rotate(25deg); }
-.auth-brand-mark::after { right: 4px; bottom: 5px; transform: rotate(-65deg); }
+.brand-leaf-icon { width: 31px; height: 31px; flex: none; display: block; }
 .auth-intro > .eyebrow { margin-bottom: 12px; }
 .auth-intro h1 { font-size: clamp(38px, 4.3vw, 57px); line-height: 1.12; }
 .auth-description { margin: 18px 0 22px; font-size: 15px; }
@@ -889,15 +884,17 @@ button, input { border-radius: 9px !important; }
   border-radius: 17px;
   background: linear-gradient(180deg, #edf5e8 0 65%, #d4e0c3 65% 70%, #b9ca94 70% 75%, #dfce99 75%);
 }
-.auth-garden-scene .plant-art { width: 126px; height: 126px; position: absolute; left: 50%; bottom: 7px; z-index: 2; transform: translateX(-50%); filter: drop-shadow(0 6px 4px rgba(57, 78, 47, .16)); }
+.auth-garden-steps { width: min(360px, calc(100% - 36px)); position: absolute; inset: 27px 18px 5px; z-index: 2; display: grid; grid-template-columns: repeat(3, 1fr); align-items: end; justify-items: center; margin: 0 auto; }
+.auth-garden-steps .plant-art { position: static; filter: drop-shadow(0 5px 3px rgba(57, 78, 47, .14)); }
+.auth-garden-steps .plant-pot { width: 76px; height: 76px; margin-bottom: 11px; }
+.auth-garden-steps .plant-tree { width: 108px; height: 108px; }
+.auth-empty-soil { width: 58px; height: 18px; margin-bottom: 14px; border: 1px dashed rgba(93, 72, 48, .45); border-radius: 50%; background: rgba(120, 88, 52, .13); box-shadow: inset 0 -4px 0 rgba(109, 79, 47, .09); }
 .auth-cloud { position: absolute; width: 48px; height: 13px; border-radius: 999px; background: rgba(255,255,255,.72); }
 .auth-cloud::before, .auth-cloud::after { content: ""; position: absolute; bottom: 0; border-radius: 50%; background: inherit; }
 .auth-cloud::before { left: 8px; width: 20px; height: 20px; }
 .auth-cloud::after { right: 6px; width: 15px; height: 16px; }
 .auth-cloud-one { left: 28px; top: 34px; }
 .auth-cloud-two { right: 25px; top: 20px; transform: scale(.72); }
-.auth-scene-stone { position: absolute; right: 44px; bottom: 25px; width: 35px; height: 16px; border-radius: 55% 50% 20% 20%; background: #aab49e; box-shadow: -7px 4px 0 #929d88; }
-.coming-soon { grid-template-columns: 1fr auto; gap: 8px 18px; padding: 15px 17px; border: 1px solid #d9e3d4; border-radius: 12px; background: rgba(255,255,255,.6); font-size: 11px; }
 .auth-panel { padding: 34px; border-color: #d3dfcf; border-radius: 18px; box-shadow: 0 15px 35px rgba(55, 76, 54, .10); }
 .panel-heading h2 { font-size: 27px; }
 
@@ -931,7 +928,11 @@ button, input { border-radius: 9px !important; }
   .auth-shell { display: block; padding: 25px 18px; }
   .auth-intro { margin-bottom: 24px; }
   .auth-garden-scene { height: 110px; }
-  .auth-garden-scene .plant-art { width: 105px; height: 105px; }
+  .auth-garden-steps { inset: 22px 8px 4px; grid-template-columns: 1fr 12px 1fr 12px 1fr; }
+  .auth-garden-steps .plant-pot { width: 55px; height: 55px; }
+  .auth-garden-steps .plant-tree { width: 78px; height: 78px; }
+  .auth-empty-soil { width: 43px; height: 14px; margin-bottom: 10px; }
+  .auth-growth-arrow { font-size: 11px; }
   .auth-panel { padding: 26px 20px; }
   .app-header h1 { font-size: 25px; }
   .growth-panel { grid-template-columns: 1fr; }

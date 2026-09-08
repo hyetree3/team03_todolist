@@ -38,7 +38,7 @@ export default function LoginPage() {
   return (
     <AuthLayout
       eyebrow="TEAM 03 · TODO LIST"
-      title="할 일을 선명하게, 하루를 가볍게."
+      title={<>하루의 할 일이,<br />한 잎의 기록으로.</>}
       description="로그인하고 오늘 해야 할 일을 한곳에서 관리하세요."
       footer={<p className="auth-footer">처음이신가요? <Link to="/register">회원가입</Link></p>}
     >

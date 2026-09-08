@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import PlantGrowth from './PlantGrowth.jsx'
+import BrandLeaf from './BrandLeaf.jsx'
 import { getGrowth } from './GrowthPanel.jsx'
 
 const navigation = [
@@ -17,7 +18,7 @@ export default function AppSidebar({ username, todayPoints, todayPlant }) {
     <aside className="app-sidebar">
       <div className="sidebar-top">
         <div className="sidebar-brand">
-          <span className="sidebar-brand-mark" aria-hidden="true" />
+          <BrandLeaf />
           <div>
             <strong>한 잎</strong>
             <span>작은 할 일의 기록</span>
