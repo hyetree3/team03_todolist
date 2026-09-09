@@ -1,6 +1,7 @@
 .env
+env.example
 app.db
-seed.py
+app.db-journal
 __pycache__/
 *.pyc
 .venv/

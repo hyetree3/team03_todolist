@@ -65,3 +65,19 @@ class PointLog(SQLModel, table=True):
     todo_id: Optional[int] = Field(default=None, foreign_key="todos.id")
     point: int = Field(default=0)  # 완료 시 +10, 완료 취소 시 -10, 자정 기본 행은 0
     pointdate: date = Field(default_factory=lambda: now_kst().date(), index=True)
+
+
+class CalendarEventLog(SQLModel, table=True):
+    """kakao 모듈이 만든 구글 캘린더 이벤트 기록 (kakao/models.py와 동일한 테이블).
+
+    할일(Todo)이 삭제되면 그 행 자체가 사라져서 event_id를 todo에 저장해두는 것만으론
+    "캘린더 이벤트도 지워야 한다"는 걸 알아챌 방법이 없어 별도 로그로 남긴다. kakao의
+    스케줄러가 주기적으로 훑어 정리하고, backend는 구글 연동 해제(disconnect) 시 이
+    유저의 이벤트를 한 번에 정리하기 위해 같은 테이블을 참조한다."""
+    __tablename__ = "calendar_event_logs"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    todo_id: int
+    user_id: int = Field(foreign_key="users.id")
+    event_id: str
+    created_at: datetime = Field(default_factory=now_kst)

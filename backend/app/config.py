@@ -19,6 +19,9 @@ TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
 # DB
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./app.db")
 
+# kakao 파트(재원) 통합: Discord/Google 연동 OAuth 콜백이 프론트로 돌아갈 때 쓰는 주소.
+FRONTEND_BASE_URL = os.getenv("FRONTEND_BASE_URL", "http://localhost:5173")
+
 if not SECRET_KEY:
     # 서버 기동 시점에 바로 알아채도록 명시적으로 경고한다.
     raise RuntimeError("SECRET_KEY가 설정되지 않았습니다. .env 파일을 확인하세요.")

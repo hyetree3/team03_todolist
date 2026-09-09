@@ -216,3 +216,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ---------- 이 프로젝트 전용 ----------
+# frontend (Node.js) 빌드 산출물 — 절대 커밋하지 말 것
+node_modules/
+
+# 로컬 SQLite DB (실제 비밀번호 해시/암호화된 토큰이 들어있음, 절대 커밋하지 말 것)
+*.db
+*.db-journal

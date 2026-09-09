@@ -2,12 +2,13 @@
 from datetime import timedelta
 from typing import Literal, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from sqlmodel import Session, func, select
 
 from app.database import get_session
 from app.deps import get_current_user
 from app.models import PointLog, Todo, User
+from app.notification_scheduler import cleanup_calendar_event, handle_todo_created, schedule_due_soon
 from app.schemas import (
     CategoryStat,
     DailyCompletion,
@@ -36,6 +37,7 @@ def _get_owned_todo(todo_id: int, user: User, session: Session) -> Todo:
 @router.post("", response_model=TodoRead, status_code=status.HTTP_201_CREATED)
 def create_todo(
     payload: TodoCreate,
+    background_tasks: BackgroundTasks,
     user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ):
@@ -49,6 +51,8 @@ def create_todo(
     session.add(todo)
     session.commit()
     session.refresh(todo)
+    # 응답을 기다리게 하지 않고, 생성 알림(Discord DM)/구글 캘린더 등록을 백그라운드로 처리한다.
+    background_tasks.add_task(handle_todo_created, todo.id)
     return todo
 
 
@@ -73,11 +77,19 @@ def get_todo_stats(
     prev_start, prev_end = previous_period_range(period, start, end)
 
     def completed_count_and_daily(range_start, range_end):
+        # 할일(todo_id)별로 "가장 최근" point_log 행 하나만 본다 — 완료/취소를 몇 번
+        # 반복했든 최종 상태 기준으로 날짜당 1건만 잡히게 하기 위함(완료 이벤트를
+        # 그냥 다 세면 취소된 것까지 중복으로 잡혀서 실제 완료 개수보다 부풀려짐).
+        latest_id_subq = (
+            select(func.max(PointLog.id))
+            .where(PointLog.user_id == user.id, PointLog.todo_id.is_not(None))
+            .group_by(PointLog.todo_id)
+        )
         rows = session.exec(
             select(PointLog.pointdate, func.count())
             .where(
-                PointLog.user_id == user.id,
-                PointLog.point > 0,
+                PointLog.id.in_(latest_id_subq),
+                PointLog.point > 0,  # 최종 상태가 완료(+10)인 것만 — 취소로 끝난 건 제외
                 PointLog.pointdate >= range_start.date(),
                 PointLog.pointdate < range_end.date(),
             )
@@ -161,6 +173,7 @@ def get_todo(
 def update_todo(
     todo_id: int,
     payload: TodoUpdate,
+    background_tasks: BackgroundTasks,
     user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ):
@@ -186,15 +199,23 @@ def update_todo(
     session.add(todo)
     session.commit()
     session.refresh(todo)
+
+    # 마감 시각이 새로 생겼거나 바뀌었으면 "마감 1시간 전" 예약도 그 새 시각에 맞춰 다시 건다.
+    if "due_at" in data and todo.due_at and not todo.is_done:
+        background_tasks.add_task(schedule_due_soon, todo.id, todo.due_at)
+
     return todo
 
 
 @router.delete("/{todo_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_todo(
     todo_id: int,
+    background_tasks: BackgroundTasks,
     user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ):
     todo = _get_owned_todo(todo_id, user, session)
     session.delete(todo)
     session.commit()
+    # 이 할일 때문에 만들어졌던 구글 캘린더 이벤트가 있으면 바로 지운다.
+    background_tasks.add_task(cleanup_calendar_event, todo_id, user.id)

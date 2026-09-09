@@ -1,3 +1,4 @@
+# CLAUD.MD에 명시된 공용 가상환경 버전 고정 목록
 annotated-doc==0.0.5
 annotated-types==0.8.0
 anyio==4.15.1
@@ -37,7 +38,11 @@ uvicorn==0.52.4
 watchfiles==1.2.0
 websockets==17.1
 
-# ---------- kakao 파트(Discord 봇 + Google Calendar 연동) OAuth 라우터 이식용 ----------
+# ---------- kakao 파트(Discord 봇 + Google Calendar 연동) 전용 추가 패키지 ----------
+# discord.py 2.4+ 부터 User-Installable App(서버 없이 개인 계정 설치) 지원
+discord.py==2.4.0
+# Python 3.13+에서 표준 라이브러리 audioop가 제거되어 discord.py가 필요로 하는 대체 패키지
+audioop-lts==0.2.1; python_version >= "3.13"
 google-auth==2.35.0
 google-auth-oauthlib==1.2.1
 google-api-python-client==2.149.0
